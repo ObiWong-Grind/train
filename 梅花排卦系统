@@ -1,0 +1,461 @@
+"""
+    新手个人练习的一个梅花易数排卦系统，纯粹属于个人练习
+"""
+
+import random
+
+
+class Yao:
+    """
+        爻
+    """
+    def __init__(self):
+        """
+            1代表阳爻, 2代表阴爻, 3代表阳爻动, 4代表阴爻动
+        """
+        self.__yang_yao = 1
+        self.__yin_yao = 2
+        self.__yang_change = 3
+        self.__yin_change = 4
+
+    @property
+    def yang_yao(self):
+        return self.__yang_yao
+
+    @property
+    def yin_yao(self):
+        return self.__yin_yao
+
+    @property
+    def yang_change(self):
+        return self.__yang_change
+
+    @property
+    def yin_change(self):
+        return self.__yin_change
+
+    def generate_diagram(self):
+        raise NotImplementedError()
+
+
+class QianDiagram(Yao):
+    """
+        乾卦 1, 1, 1
+    """
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self):
+        diagrams_list = [self.yang_yao, self.yang_yao, self.yang_yao]
+        return diagrams_list
+
+
+class DuiDiagram(Yao):
+    """
+        兑卦 2, 1, 1
+    """
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self):
+        diagrams_list = [self.yin_yao, self.yang_yao, self.yang_yao]
+        return diagrams_list
+
+
+class LiDiagram(Yao):
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self):
+        """
+            离卦 1, 2, 1
+        """
+        diagrams_list = [self.yang_yao, self.yin_yao, self.yang_yao]
+        return diagrams_list
+
+
+class ZhenDiagram(Yao):
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self):
+        """
+            震卦 2, 2, 1
+        """
+        diagrams_list = [self.yin_yao, self.yin_yao, self.yang_yao]
+        return diagrams_list
+
+
+class XunDiagram(Yao):
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self):
+        """
+            巽卦 1, 1, 2
+        """
+        diagrams_list = [self.yang_yao, self.yang_yao, self.yin_yao]
+        return diagrams_list
+
+
+class KanDiagram(Yao):
+    """
+        坎卦 2, 1, 2
+    """
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self):
+        diagrams_list = [self.yin_yao, self.yang_yao, self.yin_yao]
+        return diagrams_list
+
+
+class GenDiagram(Yao):
+    """
+        艮卦 1, 2, 2
+    """
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self):
+        diagrams_list = [self.yang_yao, self.yin_yao, self.yin_yao]
+        return diagrams_list
+
+
+class KunDiagram(Yao):
+    """
+        坤卦 2, 2, 2
+    """
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self):
+        diagrams_list = [self.yin_yao, self.yin_yao, self.yin_yao]
+        return diagrams_list
+
+
+class DiagramsController:
+    """
+        卦爻划分
+    """
+    def __init__(self):
+        self.__yao = Yao()
+
+    @property
+    def yao(self):
+        return self.__yao
+
+    def generate_diagram(self, last_diagrams_number, nex_diagrams_number):
+        raise NotImplementedError()
+
+    def beg_remainder(self, value):
+        """
+            给整数取8的余数
+        :param value: int型
+        :return: 0-7 int型
+        """
+        return value % 8
+
+    def change_remainder(self, value):
+        """
+            给整数取6的余数
+        :param value: int型
+        :return: 0-5 int型
+        """
+        return value % 6
+
+
+class OriginalDiagramsController(DiagramsController):
+    """
+        本卦
+    """
+    def generate_diagram(self, last_diagrams_number, nex_diagrams_number):
+        """
+            生成本卦
+        :param last_diagrams_number: 上卦数字 int
+        :param nex_diagrams_number: 下卦数字 int
+        :return: 六个元素的本卦列表
+        """
+        last_diagrams = self.beg_remainder(last_diagrams_number)
+        nex_diagrams = self.beg_remainder(nex_diagrams_number)
+        return self.__generate_yaos(last_diagrams) + self.__generate_yaos(nex_diagrams)
+
+    def __generate_yaos(self, value):
+        """
+            排出一个自上而下的六个爻的本卦 本卦索引[0, 1, 2, 3, 4, 5] 等同于 ["六爻", "五爻", "四爻", "三爻", "二爻", "一爻"]
+        """
+        if value == 1:
+            qian = QianDiagram()
+            return qian.generate_diagram()
+        elif value == 2:
+            dui = DuiDiagram()
+            return dui.generate_diagram()
+        elif value == 3:
+            li = LiDiagram()
+            return li.generate_diagram()
+        elif value == 4:
+            zhen = ZhenDiagram()
+            return zhen.generate_diagram()
+        elif value == 5:
+            xun = XunDiagram()
+            return xun.generate_diagram()
+        elif value == 6:
+            kan = KanDiagram()
+            return kan.generate_diagram()
+        elif value == 7:
+            gen = GenDiagram()
+            return gen.generate_diagram()
+        else:
+            kun = KunDiagram()
+            return kun.generate_diagram()
+
+
+class OriginalChangeDiagramsController(DiagramsController):
+    """
+        本卦变爻标记的本卦，暂时使用等到有前端时就不需要这个类了
+    """
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self, last_diagrams_number, nex_diagrams_number):
+        """
+            生成本卦变爻标记的本卦
+        :param last_diagrams_number: 上卦数字 int
+        :param nex_diagrams_number: 下卦数字 int
+        :return: 六个元素的本卦列表
+        """
+        change_yao_number = self.change_remainder(last_diagrams_number + nex_diagrams_number)
+        original_diagram = OriginalDiagramsController()
+        result_list = original_diagram.generate_diagram(last_diagrams_number, nex_diagrams_number)
+        self.__change_yao_rule(change_yao_number, result_list)
+        return result_list
+
+    def __change_yao_rule(self, number, target_list):
+        """
+            本卦变爻标记规则
+        """
+        if number == 1:
+            self.__change_yao(target_list, 5)
+        elif number == 2:
+            self.__change_yao(target_list, 4)
+        elif number == 3:
+            self.__change_yao(target_list, 3)
+        elif number == 4:
+            self.__change_yao(target_list, 2)
+        elif number == 5:
+            self.__change_yao(target_list, 1)
+        elif number == 0:
+            self.__change_yao(target_list, 0)
+
+    def __change_yao(self, target_list, value):
+        """
+            替换本卦中的变爻
+        """
+        if target_list[value] == 1:
+            target_list[value] = self.yao.yang_change
+        else:
+            target_list[value] = self.yao.yin_change
+
+
+class InteractDiagramsController(DiagramsController):
+    """
+        互卦
+    """
+    def generate_diagram(self, last_diagrams_number, nex_diagrams_number):
+        """
+            生成互卦
+        :param last_diagrams_number: 上卦数字 int
+        :param nex_diagrams_number: 下卦数字 int
+        :return: 六个元素的互卦列表
+        """
+        original_diagram = OriginalDiagramsController()
+        result_list = original_diagram.generate_diagram(last_diagrams_number, nex_diagrams_number)
+        result_list = result_list[1:4] + result_list[2:5]
+        return result_list
+
+
+class ChangeDiagramsController(DiagramsController):
+    """
+        变卦
+    """
+    def __init__(self):
+        super().__init__()
+
+    def generate_diagram(self, last_diagrams_number, nex_diagrams_number):
+        """
+            生成本卦变爻标记的本卦
+        :param last_diagrams_number: 上卦数字 int
+        :param nex_diagrams_number: 下卦数字 int
+        :return: 六个元素的本卦列表
+        """
+        change_yao_number = self.change_remainder(last_diagrams_number + nex_diagrams_number)
+        original_diagram = OriginalDiagramsController()
+        result_list = original_diagram.generate_diagram(last_diagrams_number, nex_diagrams_number)
+        self.__change_yao_rule(change_yao_number, result_list)
+        return result_list
+
+    def __change_yao_rule(self, number, target_list):
+        """
+            变卦规则
+        """
+        if number == 1:
+            self.__change_yao(target_list, 5)
+        elif number == 2:
+            self.__change_yao(target_list, 4)
+        elif number == 3:
+            self.__change_yao(target_list, 3)
+        elif number == 4:
+            self.__change_yao(target_list, 2)
+        elif number == 5:
+            self.__change_yao(target_list, 1)
+        elif number == 0:
+            self.__change_yao(target_list, 0)
+
+    def __change_yao(self, target_list, value):
+        """
+            在变卦中替换变爻
+        """
+        if target_list[value] == 1:
+            target_list[value] = self.yao.yin_yao
+        else:
+            target_list[value] = self.yao.yang_yao
+
+
+class RandomDiagramsController:
+    """
+        随机数生成器
+    """
+    def random_number(self):
+        """
+            生成随机数
+        :return: (上卦数, 下卦数) 均为 int型
+        """
+        last_diagrams_number = random.randint(0, 100)
+        nex_diagrams_number = random.randint(0, 100)
+        return last_diagrams_number, nex_diagrams_number
+
+
+class DiagramsView:
+    """
+        起卦视图
+    """
+    count = 0
+
+    def __init__(self):
+        self.__yang_yao = "---"
+        self.__yin_yao = "- -"
+        self.__yang_change = "--- o"
+        self.__yin_change = "- - x"
+        self.__random = RandomDiagramsController()
+
+    @property
+    def yang_yao(self):
+        return self.__yang_yao
+
+    @property
+    def yin_yao(self):
+        return self.__yin_yao
+
+    @property
+    def yang_change(self):
+        return self.__yang_change
+
+    @property
+    def yin_change(self):
+        return self.__yin_change
+
+    def __input_request(self):
+        """
+            输入求挂内容
+        """
+        input("请输入您的求问内容：")
+
+    def __three_object(self):
+        """
+            生成本卦、互卦、变卦三个对象
+        :return: 生成本卦、互卦、变卦三个对象
+        """
+        ben_list = OriginalChangeDiagramsController()
+        hu_list = InteractDiagramsController()
+        change_list = ChangeDiagramsController()
+        return ben_list, change_list, hu_list
+
+    def __random_diagrams(self):
+        """
+            随机数起卦
+        """
+        self.__input_request()
+        random_number01, random_number02 = self.__random.random_number()
+        ben_list, change_list, hu_list = self.__three_object()
+        self.__replace_show("\n本卦", ben_list.generate_diagram(random_number01, random_number02))
+        self.__replace_show("\n互卦", hu_list.generate_diagram(random_number01, random_number02))
+        self.__replace_show("\n变卦", change_list.generate_diagram(random_number01, random_number02))
+
+    def __choice_number_diagrams(self):
+        """
+            报数起卦
+        """
+        self.__input_request()
+        number01 = self.__input_number()
+        number02 = self.__input_number()
+        ben_list, change_list, hu_list = self.__three_object()
+        self.__replace_show("\n本卦", ben_list.generate_diagram(number01, number02))
+        self.__replace_show("\n互卦", hu_list.generate_diagram(number01, number02))
+        self.__replace_show("\n变卦", change_list.generate_diagram(number01, number02))
+
+    def __input_number(self):
+        """
+            验证输入的数值
+        """
+        DiagramsView.count += 1
+        number = input("请您输入第%d个0-50的数字:" % DiagramsView.count)
+        if number.isdigit() and (0 <= int(number) <= 50):
+            return int(number)
+        raise ValueError("您输入的内容不符合要求！")
+
+    def __replace_show(self, str_var, target_list):
+        """
+            将列表中的数值转行符号一一打印在控制台中
+        :param str_var: 本卦 互卦 变卦 str
+        :param target_list: 传输一个六爻的列表
+        """
+        print(str_var)
+        for item in target_list:
+            if item == 1:
+                print(self.yang_yao)
+            elif item == 2:
+                print(self.yin_yao)
+            elif item == 3:
+                print(self.yang_change)
+            elif item == 4:
+                print(self.yin_change)
+
+    def __display_menu(self):
+        """
+            菜单
+        """
+        print("1、随机起卦")
+        print("2、报数起卦")
+
+    def __select_menu(self):
+        """
+            输入快捷键
+        """
+        item = input("请输入菜单快捷键:")
+        if item == "1":
+            self.__random_diagrams()
+        elif item == "2":
+            self.__choice_number_diagrams()
+
+    def main(self):
+        """
+            入口
+        """
+        self.__display_menu()
+        self.__select_menu()
+
+
+diagram = DiagramsView()
+diagram.main()
+
+
