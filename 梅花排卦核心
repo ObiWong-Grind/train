@@ -1,5 +1,5 @@
 """
-    新手个人练习的一个梅花易数排卦核心，纯粹属于个人练习
+    以面向对象的方式做梅花排卦系统
 """
 
 import random
@@ -63,37 +63,37 @@ class DuiDiagram(Yao):
 
 
 class LiDiagram(Yao):
+    """
+        离卦 1, 2, 1
+    """
     def __init__(self):
         super().__init__()
 
     def generate_diagram(self):
-        """
-            离卦 1, 2, 1
-        """
         diagrams_list = [self.yang_yao, self.yin_yao, self.yang_yao]
         return diagrams_list
 
 
 class ZhenDiagram(Yao):
+    """
+        震卦 2, 2, 1
+    """
     def __init__(self):
         super().__init__()
 
     def generate_diagram(self):
-        """
-            震卦 2, 2, 1
-        """
         diagrams_list = [self.yin_yao, self.yin_yao, self.yang_yao]
         return diagrams_list
 
 
 class XunDiagram(Yao):
+    """
+        巽卦 1, 1, 2
+    """
     def __init__(self):
         super().__init__()
 
     def generate_diagram(self):
-        """
-            巽卦 1, 1, 2
-        """
         diagrams_list = [self.yang_yao, self.yang_yao, self.yin_yao]
         return diagrams_list
 
@@ -366,7 +366,7 @@ class DiagramsView:
 
     def __input_request(self):
         """
-            输入求挂内容
+            输入求卦内容
         """
         input("请输入您的求问内容：")
 
