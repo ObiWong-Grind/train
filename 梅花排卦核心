@@ -1,5 +1,5 @@
 """
-    以面向对象的方式做梅花排卦核心, 纯粹是个人练习
+    Python 以面向对象的方式做梅花排卦核心, 纯粹是个人练习
 """
 
 import random
@@ -146,7 +146,11 @@ class DiagramsController:
         return self.__yao
 
     def generate_total_diagram(self, last_diagrams_number, nex_diagrams_number):
-        raise NotImplementedError()
+        change_yao_number = self.change_remainder(last_diagrams_number + nex_diagrams_number)
+        result_list = \
+            self.generate_yaos(self.beg_remainder(last_diagrams_number)) + \
+            self.generate_yaos(self.beg_remainder(nex_diagrams_number))
+        return change_yao_number, result_list
 
     def beg_remainder(self, value):
         """
@@ -208,10 +212,7 @@ class OriginalChangeDiagramsController(DiagramsController):
         :param nex_diagrams_number: 下卦数字 int
         :return: 六个元素的本卦列表
         """
-        change_yao_number = self.change_remainder(last_diagrams_number + nex_diagrams_number)
-        result_list = \
-            self.generate_yaos(self.beg_remainder(last_diagrams_number)) + \
-            self.generate_yaos(self.beg_remainder(nex_diagrams_number))
+        change_yao_number, result_list = super().generate_total_diagram(last_diagrams_number, nex_diagrams_number)
         self.__change_yao_rule(change_yao_number, result_list)
         return result_list
 
@@ -274,10 +275,7 @@ class ChangeDiagramsController(DiagramsController):
         :param nex_diagrams_number: 下卦数字 int
         :return: 六个元素的本卦列表
         """
-        change_yao_number = self.change_remainder(last_diagrams_number + nex_diagrams_number)
-        result_list = \
-            self.generate_yaos(self.beg_remainder(last_diagrams_number)) + \
-            self.generate_yaos(self.beg_remainder(nex_diagrams_number))
+        change_yao_number, result_list = super().generate_total_diagram(last_diagrams_number, nex_diagrams_number)
         self.__change_yao_rule(change_yao_number, result_list)
         return result_list
 
@@ -444,6 +442,8 @@ class DiagramsView:
 
 diagram = DiagramsView()
 diagram.main()
+
+
 
 
 
