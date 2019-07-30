@@ -1,0 +1,147 @@
+"""
+    password的密码生成模块，根据相应的条件生成密码。以后生成密码就用这个
+"""
+
+import random, string
+
+
+class SymbolPool:
+    def __init__(self):
+        self.__symbol_pool = "!#$%&\'\"()*+,-./:;<=>?@[]^_`{|}~"
+
+    @property
+    def symbol_pool(self):
+        return self.__symbol_pool
+
+
+class PasswordManagerController:
+    """
+        密码生成控制器
+    """
+    def __init__(self):
+        self.__manager = SymbolPool()
+        self.__password_list = []
+
+    @property
+    def password_list(self):
+        return self.__password_list
+
+    def __generate_number(self, value):
+        """
+            随机生成对应值的数字加入列表
+        :param value: 生成数字的数量 int型
+        """
+        for n in range(value):
+            self.__password_list.append(random.choice(string.digits))
+
+    def __generate_symbol(self, value):
+        """
+            随机生成对应值的特殊字符加入列表
+        :param value: 生成特殊字符的数量 int型
+        """
+        for s in range(value):
+            self.__password_list.append(random.choice(self.__manager.symbol_pool))
+
+    def __generate_alpha(self, value):
+        """
+            随机生成对应值的大小写英文字母加入列表
+        :param value: 生成大小写英文字母的数量 int型
+        """
+        for s in range(value):
+            self.__password_list.append(random.choice(string.ascii_letters))
+
+    def __generate_password(self, sum_number=4, number=0, symbol=0):
+        """
+            生成数字、字符、字母核心逻辑
+        """
+        if sum_number >= number + symbol:
+            self.__generate_number(number)
+            self.__generate_symbol(symbol)
+            self.__generate_alpha(sum_number - number - symbol)
+        else:
+            if number >= sum_number:
+                self.__generate_number(sum_number)
+                self.__generate_symbol(sum_number - number)
+            else:
+                self.__generate_number(number)
+                self.__generate_symbol(sum_number - number)
+
+    def __shuffle_list(self):
+        """
+            乱序列表
+        """
+        random.shuffle(self.__password_list)
+
+    def output_password(self, sum_number=4, number=0, symbol=0):
+        """
+            输出密码
+        :return: 密码 str
+        """
+        self.__generate_password(sum_number, number, symbol)
+        self.__shuffle_list()
+        str_password = "".join(self.__password_list)
+        return str_password
+
+
+class PasswordView:
+    """
+        密码生成视图
+    """
+    def __init__(self):
+        self.__view = PasswordManagerController()
+
+    def __input_condition(self):
+        """
+            输入条件
+        :return: 返回密码 str
+        """
+        sum_num = self.__input_sum_num()
+        you_num = self.__input_you_num()
+        you_symbol = self.__input_you_symbol()
+        return self.__view.output_password(sum_num, you_num, you_symbol)
+
+    def __input_sum_num(self):
+        """
+            输入生成密码的总位数
+        """
+        sum_num = input("请您输入4~84之间的一个数字，系统将为您生成一个密码：\n")
+        if sum_num.isdigit() and 4 <= int(sum_num) <= 84:
+            return int(sum_num)
+        raise ValueError("输入的内容与要求不符!")
+
+    def __input_you_num(self):
+        """
+            输入生成密码中需要有几位数字
+        """
+        you_num = input("输入0~10之间的一个数字，将决定密码中有“数字”数量：\n")
+        if you_num.isdigit() and 0 <= int(you_num) <= 10:
+            return int(you_num)
+        raise ValueError("输入的数字内容与要求不符!")
+
+    def __input_you_symbol(self):
+        """
+            输入生成密码中需要有几位特殊字符
+        """
+        you_symbol = input("输入0~10之间的一个数字，将决定密码中有“字符”数量：\n")
+        if you_symbol.isdigit() and 0 <= int(you_symbol) <= 10:
+            return int(you_symbol)
+        raise ValueError("输入的字符内容与要求不符!")
+
+    def __print_password(self):
+        """
+            打印密码
+        """
+        result_password = self.__input_condition()
+        print("\n您获得的密码为：\033[33m%s\033[0m" % result_password)
+
+    def main(self):
+        """
+            总入口
+        """
+        self.__print_password()
+
+
+view = PasswordView()
+view.main()
+
+
