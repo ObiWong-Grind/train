@@ -146,6 +146,12 @@ class DiagramsController:
         return self.__yao
 
     def generate_total_diagram(self, last_diagrams_number, nex_diagrams_number):
+        """
+            生成本卦动爻数字
+        :param last_diagrams_number: 上卦数字 int
+        :param nex_diagrams_number: 下卦数字 int
+        :return: change_yao_number 动爻数, result_list 本卦
+        """
         change_yao_number = self.change_remainder(last_diagrams_number + nex_diagrams_number)
         result_list = \
             self.generate_yaos(self.beg_remainder(last_diagrams_number)) + \
