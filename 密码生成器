@@ -2,10 +2,6 @@
     password 生成，根据相应的条件生成密码。
 """
 
-"""
-    password的密码生成模块，根据相应的条件生成密码。以后生成密码就用这个
-"""
-
 import random, string
 
 
@@ -235,6 +231,5 @@ class PasswordView:
 
 view = PasswordView()
 view.main()
-
 
 
