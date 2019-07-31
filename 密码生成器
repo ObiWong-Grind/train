@@ -2,6 +2,10 @@
     password 生成，根据相应的条件生成密码。
 """
 
+"""
+    password的密码生成模块，根据相应的条件生成密码。以后生成密码就用这个
+"""
+
 import random, string
 
 
@@ -16,16 +20,16 @@ class SymbolPool:
 
 class PasswordManagerController:
     """
-        密码生成内容控制器
+        密码内容生成控制器
     """
     def __init__(self):
-        self.__manager = SymbolPool()
+        self.__manager = eval("SymbolPool()")
 
     @property
     def manager(self):
         return self.__manager
 
-    def generate(self, value):
+    def generate(self):
         raise NotImplementedError()
 
 
@@ -33,14 +37,25 @@ class NumberGenerateController(PasswordManagerController):
     """
         生成数字密码列表
     """
-    def generate(self, value):
+    def __init__(self, number):
+        super().__init__()
+        self.number = number
+
+    @property
+    def number(self):
+        return self.__number
+
+    @number.setter
+    def number(self, value):
+        self.__number = value
+
+    def generate(self):
         """
             随机生成对应值的数字加入列表
-        :param value: 生成数字的数量 int型
         :return: 返回一个含有要求位数的数字列表
         """
         number_list = []
-        for n in range(value):
+        for n in range(self.number):
             number_list.append(random.choice(string.digits))
         return number_list
 
@@ -49,17 +64,25 @@ class SymbolGenerateController(PasswordManagerController):
     """
         生成特殊字符密码列表
     """
-    def __init__(self):
+    def __init__(self, number):
         super().__init__()
+        self.number = number
 
-    def generate(self, value):
+    @property
+    def number(self):
+        return self.__number
+
+    @number.setter
+    def number(self, value):
+        self.__number = value
+
+    def generate(self):
         """
             随机生成对应值的特殊字符加入列表
-        :param value: 生成特殊字符的数量 int型
         :return: 返回一个含有要求位数的特殊字符列表
         """
         symbol_list = []
-        for s in range(value):
+        for s in range(self.number):
             symbol_list.append(random.choice(super().manager.symbol_pool))
         return symbol_list
 
@@ -68,14 +91,25 @@ class AlphaGenerateController(PasswordManagerController):
     """
         生成大小写英文字母密码列表
     """
-    def generate(self, value):
+    def __init__(self, number):
+        super().__init__()
+        self.number = number
+
+    @property
+    def number(self):
+        return self.__number
+
+    @number.setter
+    def number(self, value):
+        self.__number = value
+
+    def generate(self):
         """
             随机生成对应值的大小写英文字母加入列表
-        :param value: 生成大小写英文字母的数量 int型
         :return: 返回一个含有要求位数的小写英文字母列表
         """
         alpha_list = []
-        for s in range(value):
+        for s in range(self.number):
             alpha_list.append(random.choice(string.ascii_letters))
         return alpha_list
 
@@ -84,43 +118,60 @@ class PasswordController:
     """
         密码合成控制器
     """
-    def __init__(self):
-        self.__number = NumberGenerateController()
-        self.__symbol = SymbolGenerateController()
-        self.__alpha = AlphaGenerateController()
+    def __init__(self, sum_number=4, number=0, symbol=0):
+        self.sum_number = sum_number
+        self.number = number
+        self.symbol = symbol
+        self.__password_config = self.__generate_password()
+
+    @property
+    def sum_number(self):
+        return self.__sum_number
+
+    @sum_number.setter
+    def sum_number(self, value):
+        self.__sum_number = value
 
     @property
     def number(self):
         return self.__number
 
+    @number.setter
+    def number(self, value):
+        self.__number = value
+
     @property
     def symbol(self):
         return self.__symbol
 
-    @property
-    def alpha(self):
-        return self.__alpha
+    @symbol.setter
+    def symbol(self, value):
+        self.__symbol = value
 
-    def __generate_password(self, sum_number=4, number=0, symbol=0):
+    def __generate_password(self):
         """
-            生成数字、字符、字母核心逻辑
+            生成数字、字符、字母配置文件, 之后独立出去
         """
-        if sum_number >= number + symbol:
-            result_list = self.number.generate(number) + self.symbol.generate(symbol) + \
-                          self.alpha.generate(sum_number - number - symbol)
+        if self.sum_number >= self.number + self.symbol:
+            result_list = ["NumberGenerateController(%d)" % self.number, "SymbolGenerateController(%d)" % self.symbol,
+                           "AlphaGenerateController(%d)" % (self.sum_number - self.number - self.symbol)]
         else:
-            if number >= sum_number:
-                result_list = self.number.generate(sum_number) + self.symbol.generate(sum_number - number)
+            if self.number >= self.sum_number:
+                result_list = ["NumberGenerateController(%d)" % self.sum_number,
+                               "SymbolGenerateController(%d)" % (self.sum_number - self.number)]
             else:
-                result_list = self.number.generate(number) + self.symbol.generate(sum_number - number)
+                result_list = ["NumberGenerateController(%d)" % self.number,
+                               "SymbolGenerateController(%d)" % (self.sum_number - self.number)]
         return result_list
 
-    def output_password(self, sum_number=4, number=0, symbol=0):
+    def output_password(self):
         """
             输出密码
         :return: 密码 str
         """
-        result_list = self.__generate_password(sum_number, number, symbol)
+        result_list = []
+        for item in self.__password_config:
+            result_list.extend(eval(item).generate())
         random.shuffle(result_list)
         str_password = "".join(result_list)
         return str_password
@@ -130,13 +181,6 @@ class PasswordView:
     """
         密码生成视图
     """
-    def __init__(self):
-        self.__view = PasswordController()
-
-    @property
-    def view(self):
-        return self.__view
-
     def __input_condition(self):
         """
             输入条件
@@ -145,7 +189,8 @@ class PasswordView:
         sum_num = self.__input_sum_num()
         you_num = self.__input_you_num()
         you_symbol = self.__input_you_symbol()
-        return self.view.output_password(sum_num, you_num, you_symbol)
+        re = PasswordController(sum_num, you_num, you_symbol)
+        return re.output_password()
 
     def __input_sum_num(self):
         """
