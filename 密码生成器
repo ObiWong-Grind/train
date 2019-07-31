@@ -119,6 +119,7 @@ class PasswordController:
         self.number = number
         self.symbol = symbol
         self.__password_config = self.__generate_password()
+        self.__password_list = []
 
     @property
     def sum_number(self):
@@ -165,11 +166,10 @@ class PasswordController:
             输出密码
         :return: 密码 str
         """
-        result_list = []
         for item in self.__password_config:
-            result_list.extend(eval(item).generate())
-        random.shuffle(result_list)
-        str_password = "".join(result_list)
+            self.__password_list.extend(eval(item).generate())
+        random.shuffle(self.__password_list)
+        str_password = "".join(self.__password_list)
         return str_password
 
 
@@ -185,8 +185,8 @@ class PasswordView:
         sum_num = self.__input_sum_num()
         you_num = self.__input_you_num()
         you_symbol = self.__input_you_symbol()
-        re = PasswordController(sum_num, you_num, you_symbol)
-        return re.output_password()
+        result_str = PasswordController(sum_num, you_num, you_symbol)
+        return result_str.output_password()
 
     def __input_sum_num(self):
         """
