@@ -139,7 +139,8 @@ class DiagramsController:
         卦爻划分
     """
     def __init__(self):
-        self.__yao = Yao()
+        self.__yao = eval("Yao()")
+        self.__list_config = self.__load_config_file()
 
     @property
     def yao(self):
@@ -152,13 +153,13 @@ class DiagramsController:
         :param nex_diagrams_number: 下卦数字 int
         :return: change_yao_number 动爻数, result_list 本卦
         """
-        change_yao_number = self.change_remainder(last_diagrams_number + nex_diagrams_number)
+        change_yao_number = self.__change_remainder(last_diagrams_number + nex_diagrams_number)
         result_list = \
-            self.generate_yaos(self.beg_remainder(last_diagrams_number)) + \
-            self.generate_yaos(self.beg_remainder(nex_diagrams_number))
+            self.__generate_yaos(self.__beg_remainder(last_diagrams_number)) + \
+            self.__generate_yaos(self.__beg_remainder(nex_diagrams_number))
         return change_yao_number, result_list
 
-    def beg_remainder(self, value):
+    def __beg_remainder(self, value):
         """
             给整数取8的余数
         :param value: int型
@@ -166,7 +167,7 @@ class DiagramsController:
         """
         return value % 8
 
-    def change_remainder(self, value):
+    def __change_remainder(self, value):
         """
             给整数取6的余数
         :param value: int型
@@ -174,34 +175,34 @@ class DiagramsController:
         """
         return value % 6
 
-    def generate_yaos(self, value):
+    def __load_config_file(self):
+        """
+            配置文件
+        :return: 列表
+        """
+        return ["QianDiagram()", "DuiDiagram()", "LiDiagram()", "ZhenDiagram()", "XunDiagram()", "KanDiagram()",
+                "GenDiagram()", "KunDiagram()"]
+
+    def __generate_yaos(self, value):
         """
             排出一个自上而下的六个爻的卦 卦索引[0, 1, 2, 3, 4, 5] 等同于 ["六爻", "五爻", "四爻", "三爻", "二爻", "一爻"]
         """
         if value == 1:
-            qian = QianDiagram()
-            return qian.generate_diagram()
+            return eval(self.__list_config[0]).generate_diagram()
         elif value == 2:
-            dui = DuiDiagram()
-            return dui.generate_diagram()
+            return eval(self.__list_config[1]).generate_diagram()
         elif value == 3:
-            li = LiDiagram()
-            return li.generate_diagram()
+            return eval(self.__list_config[2]).generate_diagram()
         elif value == 4:
-            zhen = ZhenDiagram()
-            return zhen.generate_diagram()
+            return eval(self.__list_config[3]).generate_diagram()
         elif value == 5:
-            xun = XunDiagram()
-            return xun.generate_diagram()
+            return eval(self.__list_config[4]).generate_diagram()
         elif value == 6:
-            kan = KanDiagram()
-            return kan.generate_diagram()
+            return eval(self.__list_config[5]).generate_diagram()
         elif value == 7:
-            gen = GenDiagram()
-            return gen.generate_diagram()
+            return eval(self.__list_config[6]).generate_diagram()
         elif value == 0:
-            kun = KunDiagram()
-            return kun.generate_diagram()
+            return eval(self.__list_config[7]).generate_diagram()
 
 
 class OriginalChangeDiagramsController(DiagramsController):
@@ -260,9 +261,8 @@ class InteractDiagramsController(DiagramsController):
         :param nex_diagrams_number: 下卦数字 int
         :return: 六个元素的互卦列表
         """
-        result_list = \
-            self.generate_yaos(self.beg_remainder(last_diagrams_number)) + \
-            self.generate_yaos(self.beg_remainder(nex_diagrams_number))
+        re = super().generate_total_diagram(last_diagrams_number, nex_diagrams_number)
+        result_list = re[1]
         result_list = result_list[1:4] + result_list[2:5]
         return result_list
 
@@ -337,7 +337,7 @@ class DiagramsView:
         self.__yin_yao = "- -"
         self.__yang_change = "--- o"
         self.__yin_change = "- - x"
-        self.__random = RandomNumberController()
+        self.__random = eval("RandomNumberController()")
 
     @property
     def yang_yao(self):
