@@ -239,14 +239,14 @@ class OriginalChangeDiagramsController(DiagramsController):
         elif number == 0:
             self.__change_yao(target_list, 0)
 
-    def __change_yao(self, target_list, value):
+    def __change_yao(self, target_list, indexes):
         """
             替换本卦中的变爻
         """
-        if target_list[value] == 1:
-            target_list[value] = self.yao.yang_change
+        if target_list[indexes] == 1:
+            target_list[indexes] = self.yao.yang_change
         else:
-            target_list[value] = self.yao.yin_change
+            target_list[indexes] = self.yao.yin_change
 
 
 class InteractDiagramsController(DiagramsController):
@@ -302,14 +302,14 @@ class ChangeDiagramsController(DiagramsController):
         elif number == 0:
             self.__change_yao(target_list, 0)
 
-    def __change_yao(self, target_list, value):
+    def __change_yao(self, target_list, indexes):
         """
             在变卦中替换变爻
         """
-        if target_list[value] == 1:
-            target_list[value] = self.yao.yin_yao
+        if target_list[indexes] == 1:
+            target_list[indexes] = self.yao.yin_yao
         else:
-            target_list[value] = self.yao.yang_yao
+            target_list[indexes] = self.yao.yang_yao
 
 
 class RandomNumberController:
