@@ -1,0 +1,219 @@
+"""
+    请用面相对象思想, 描述以下场景:
+        玩家(攻击力)攻击敌人(hp)，敌人受伤后(掉血)，还可能死亡(掉装备/加分)
+        敌人(攻击力)攻击玩家(hp)，玩家受伤后(掉血/碎屏)，还可能死亡(游戏结束)
+
+    思考: 变化点是数据的不同还是行为的不同
+"""
+import time
+import random
+
+
+class Player:
+    def __init__(self, name, hp, atk):
+        self.player_name = name
+        self.player_hp = hp
+        self.player_atk = atk
+        self.__player_harm = 0
+
+    @property
+    def player_name(self):
+        return self.__player_name
+
+    @player_name.setter
+    def player_name(self, value):
+        self.__player_name = value
+
+    @property
+    def player_hp(self):
+        return self.__player_hp
+
+    @player_hp.setter
+    def player_hp(self, value):
+        self.__player_hp = value
+
+    @property
+    def player_atk(self):
+        return self.__player_atk
+
+    @player_atk.setter
+    def player_atk(self, value):
+        self.__player_atk = value
+
+    @property
+    def player_harm(self):
+        return self.__player_harm
+
+    def player_attack(self, skill, enemy):
+        time.sleep(skill.skill_cd)
+        self.__player_harm = \
+            random.randint(self.player_atk[0], self.player_atk[1]) + skill.skill_atk - enemy.enemy_defense
+        print("\033[36m%s\033[0m施放：\033[33m%s\033[0m 对\033[31m%s\033[0m造成了%d点的伤害！"
+              % (self.player_name, skill.skill_name, enemy.enemy_name, self.player_harm))
+        enemy.damage(self.player_harm)
+
+    def damage(self, value):
+        self.player_hp -= value
+        if self.player_hp < 0:
+            self.__death()
+
+    def __death(self):
+        print("\033[31m%s最终体力不支！\033[0m" % self.player_name)
+
+
+class Enemy:
+    def __init__(self, name, hp, atk, defense, critical):
+        self.enemy_name = name
+        self.enemy_hp = hp
+        self.enemy_atk = atk
+        self.enemy_defense = defense
+        self.enemy_critical = critical
+        self.__enemy_harm = 0
+
+    @property
+    def enemy_name(self):
+        return self.__enemy_name
+
+    @enemy_name.setter
+    def enemy_name(self, value):
+        self.__enemy_name = value
+
+    @property
+    def enemy_hp(self):
+        return self.__enemy_hp
+
+    @enemy_hp.setter
+    def enemy_hp(self, value):
+        self.__enemy_hp = value
+
+    @property
+    def enemy_atk(self):
+        return self.__enemy_atk
+
+    @enemy_atk.setter
+    def enemy_atk(self, value):
+        self.__enemy_atk = value
+
+    @property
+    def enemy_defense(self):
+        return self.__enemy_defense
+
+    @enemy_defense.setter
+    def enemy_defense(self, value):
+        self.__enemy_defense = value
+
+    @property
+    def enemy_critical(self):
+        return self.__enemy_critical
+
+    @enemy_critical.setter
+    def enemy_critical(self, value):
+        self.__enemy_critical = value
+
+    @property
+    def enemy_harm(self):
+        return self.__enemy_harm
+
+    def enemy_attack(self, skill, player):
+        time.sleep(skill.skill_cd)
+        self.__enemy_harm = (self.enemy_atk + skill.skill_atk) * self.__critical()
+        print("\033[31m%s\033[0m施放：\033[33m%s\033[0m 对\033[36m%s\033[0m造成了%d点的伤害！"
+              % (self.enemy_name, skill.skill_name, player.player_name, self.enemy_harm))
+        player.damage(self.enemy_harm)
+
+    def damage(self, value):
+        self.enemy_hp -= value
+        if self.enemy_hp < 0:
+            self.__death()
+        elif 0 <= self.enemy_hp <= 1000:
+            self.__bleed()
+
+    def __bleed(self):
+        print("\033[31m%s\033[0m流血不止！" % self.enemy_name)
+
+    def __death(self):
+        print("\033[31m%s\033[0m死亡。" % self.enemy_name)
+
+    def __critical(self):
+        """
+            计算暴击几率
+        :return: 如果暴击返回2，否则返回1
+        """
+        number = int(100 / (self.enemy_critical * 100))
+        re = random.randint(1, number)
+        if re == 1:
+            return 2
+        else:
+            return 1
+
+
+class Skill:
+    def __init__(self, name, atk, cd):
+        self.skill_name = name
+        self.skill_atk = atk
+        self.skill_cd = cd
+
+    @property
+    def skill_name(self):
+        return self.__skill_name
+
+    @skill_name.setter
+    def skill_name(self, value):
+        self.__skill_name = value
+
+    @property
+    def skill_atk(self):
+        return self.__skill_atk
+
+    @skill_atk.setter
+    def skill_atk(self, value):
+        self.__skill_atk = value
+
+    @property
+    def skill_cd(self):
+        return self.__skill_cd
+
+    @skill_cd.setter
+    def skill_cd(self, value):
+        self.__skill_cd = value
+
+
+# 玩家有攻击值范围，为了测试随机攻击值
+player_list = [
+    Player("玩家1", 3000, (70, 400)),
+    Player("战士", 2000000, (1200, 1500)),
+]
+
+# 敌人有暴击值，为了测试暴击伤害
+enemy_list = [
+    Enemy("赵客", 12000, 300, 33, 0.1),
+    Enemy("敌人2", 8000, 159, 60, 0.2),
+    Enemy("敌人3", 18000, 220, 21, 0.33),
+    Enemy("敌人4", 22000, 420, 111, 0.11),
+    Enemy("敌人5", 20143, 1988, 1220, 0.01),
+    Enemy("敌人6", 42000, 820, 571, 0.05),
+]
+
+skill_list = [
+    Skill("斩击 ", 231, 3),
+    Skill("旋风斩 ", 577, 5),
+    Skill("毒刺射击 ", 100, 2),
+    Skill("瞄准射击 ", 210, 7),
+    Skill("惊鸿 ", 360, 6),
+]
+
+for player in player_list:
+    for item in enemy_list:
+        while player.player_hp > 0 and item.enemy_hp > 0:
+            if player.player_hp > 1000:
+                player.player_attack(skill_list[0], item)
+            elif player.player_hp > 0:
+                player.player_attack(skill_list[1], item)
+
+            if item.enemy_hp > 3000:
+                item.enemy_attack(skill_list[2], player)
+            elif item.enemy_hp > 1000:
+                item.enemy_attack(skill_list[4], player)
+            elif 0 <= item.enemy_hp <= 1000:
+                item.enemy_attack(skill_list[3], player)
+
