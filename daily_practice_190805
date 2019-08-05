@@ -1,0 +1,494 @@
+"""
+    将面向过程的购物车, 改为面向对象的购物车
+    商品如下:
+        101: {"name": "屠龙刀", "price": 10000},
+        102: {"name": "倚天剑", "price": 10000},
+        103: {"name": "九阴白骨爪", "price": 8000},
+        104: {"name": "九阳神功", "price": 9000},
+        105: {"name": "降龙十八掌", "price": 8000},
+        106: {"name": "乾坤大挪移", "price": 10000},
+"""
+
+
+class CommodityModel:
+    """
+        商品数据模型，包含id, name, price
+    """
+    def __init__(self, name="", price=0.0, commodity_id=0):
+        """
+            创建商品对象
+        :param name: 商品名称 str
+        :param price: 商品价格 float
+        :param commodity_id: 商品唯一标示 int
+        """
+        self.name = name
+        self.price = price
+        self.id = commodity_id
+
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
+
+    @property
+    def price(self):
+        return self.__price
+
+    @price.setter
+    def price(self, value):
+        self.__price = value
+
+
+commodity_database = []
+
+
+class CommodityManagerController:
+    """
+        商品管理控制器，负责业务逻辑处理
+    """
+    __init_id = 100
+
+    def __init__(self):
+        self.__com_list = commodity_database
+
+    @property
+    def com_list(self):
+        return self.__com_list
+
+    def add_commodity(self, commodity_info):
+        """
+            将商品数据加入数据库中
+        :param commodity_info: 带有默认学生id(0)的商品信息
+        """
+        commodity_info.id = self.__generate_id()
+        self.__com_list.append(commodity_info)
+
+    def __generate_id(self):
+        """
+            将商品信息中的默认id替换成新生成的id
+        :return: 新生成的id
+        """
+        CommodityManagerController.__init_id += 1
+        return CommodityManagerController.__init_id
+
+    def search_commodity(self, com_id):
+        """
+            根据商品id查找商品
+        :param com_id: 商品id int
+        :return: 返回 (name, price, id)形式的元组
+        """
+        for commodity in self.__com_list:
+            if commodity.id == com_id:
+                return commodity.name, commodity.price, commodity.id
+        else:
+            raise ValueError()
+
+    def remove_commodity(self, com_id):
+        """
+            根据商品id删除列表中的商品
+        :param com_id: 商品id int
+        :return: True 删除成功, False 删除失败
+        """
+        for commodity in self.__com_list:
+            if commodity.id == com_id:
+                self.__com_list.remove(commodity)
+                return True
+        return False
+
+
+class ShoppingCarModel:
+    """
+        购物车数据模型，包含id, name, price, count
+    """
+    def __init__(self, name="", price=0.0, count=0, commodity_id=0):
+        """
+            添加购物车商品对象
+        :param name: 商品名称 str
+        :param price: 商品价格 float
+        :param count: 商品购买数量 int
+        :param commodity_id: 商品唯一标示 int
+        """
+        self.name = name
+        self.price = price
+        self.count = count
+        self.id = commodity_id
+
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
+
+    @property
+    def price(self):
+        return self.__price
+
+    @price.setter
+    def price(self, value):
+        self.__price = value
+
+    @property
+    def count(self):
+        return self.__count
+
+    @count.setter
+    def count(self, value):
+        self.__count = value
+
+
+class ShoppingCarManagerController:
+    """
+        购物车管理控制器，负责业务逻辑处理
+    """
+    def __init__(self):
+        self.__car_list = []
+        self.__manager = CommodityManagerController()
+
+    @property
+    def car_list(self):
+        return self.__car_list
+
+    def add_car(self, com_id, count=1):
+        """
+            按照商品id将商品添加进购物车列表
+        :param com_id: 商品id int
+        :param count: 购买的数量
+        :return: 如果数据库中没有这个商品，返回None
+        """
+        re = self.__manager.search_commodity(com_id)
+        if re:
+            car_manager = ShoppingCarModel()
+            car_manager.name, car_manager.price, car_manager.count, car_manager.id =\
+                re[0], re[1], count, re[2]
+            self.__car_list.append(car_manager)
+
+    def remove_car(self, com_id, count=1):
+        """
+            根据商品id在购物车中移除对应数量的商品
+        :param com_id: 商品id int
+        :param count: 删除这个id的商品个数 int
+        :return: True 删除成功, False 删除失败
+        """
+        for commodity in self.__car_list:
+            if commodity.id == com_id:
+                commodity.count -= count
+                if commodity.count == 0:
+                    self.__del_car(com_id)
+                return True
+        return False
+
+    def __del_car(self, com_id):
+        """
+            根据商品id删除购物车中的商品
+        :param com_id: 商品id int
+        :return: True 删除成功, False 删除失败
+        """
+        for commodity in self.__car_list:
+            if commodity.id == com_id:
+                self.__car_list.remove(commodity)
+                return True
+        return False
+
+    def close_an_account(self):
+        """
+            合计购物车的总金额
+        :return: aggregate 总金额, 返回None时 金额为0或更小
+        """
+        aggregate = 0
+        for commodity in self.__car_list:
+            aggregate += commodity.price * commodity.count
+        if aggregate > 0:
+            return aggregate
+        else:
+            return None
+
+    def pay_money(self, money=0):
+        """
+            支付
+        :param money: 支付的金额 int
+        :return: -1 支付失败金额不足, 0 支付成功金额正好, 剩余的就是支付成功且找零
+        """
+        rental = self.close_an_account()
+        if money - rental > 0:
+            return money - rental
+        elif money - rental < 0:
+            return -1
+        elif money - rental == 0:
+            return 0
+
+
+class CommodityManagerView:
+    """
+        商品管理视图
+    """
+    def __init__(self):
+        self.__commodity_manager = CommodityManagerController()
+
+    def __display_menu(self):
+        """
+            菜单
+        """
+        menu = """
+        1、添加商品
+        2、查看商品
+        3、删除商品
+        """
+        print(menu)
+
+    def __select_menu(self):
+        """
+            输入快捷键
+        """
+        item = input("请输入菜单快捷键:")
+        if item == "1":
+            self.__input_commodity()
+        elif item == "2":
+            self.__output_commodity(self.__commodity_manager.com_list)
+        elif item == "3":
+            self.__delete_commodity()
+        elif item == "q" or item == "Q":
+            return -1
+
+    def main(self):
+        """
+            商品录入后台入口
+        """
+        while True:
+            self.__display_menu()
+            if self.__select_menu() == -1:
+                print("退出商品录入后台")
+                break
+
+    def __input_commodity(self):
+        """
+            输入商品
+        """
+        name = input("请输入商品名称:")
+        price = self.__input_message_error("输入商品价格:", "提示:商品价格输入有误!")
+        commodity = CommodityModel(name, price)
+        self.__commodity_manager.add_commodity(commodity)
+
+    def __delete_commodity(self):
+        """
+            根据商品编号数据库中移除商品
+        """
+        com_id = self.__check_id_error()
+        if self.__commodity_manager.remove_commodity(com_id):
+            print("移除成功！")
+        else:
+            print("移除失败！")
+
+    def __check_id_error(self):
+        while True:
+            com_id = Tool.input_message_error("输入商品编号:", "提示:商品编号输入有误!")
+            try:
+                self.__commodity_manager.search_commodity(com_id)
+            except Exception:
+                print("商品编号不存在!")
+                continue
+            return com_id
+
+    def __input_message_error(self, message01, message02):
+        """
+            验证相关信息
+        """
+        while True:
+            massage = input(message01)
+            try:
+                massage = float(massage)
+            except Exception:
+                print(message02)
+                continue
+            return massage
+
+    def __output_commodity(self, target_list):
+        """
+            输出商品列表
+        """
+        for commodity in target_list:
+            print(commodity.id, commodity.name, commodity.price)
+
+
+class Tool:
+    """
+        常用小工具
+    """
+    @staticmethod
+    def input_message_error(message01, message02):
+        """
+            验证相关信息
+        """
+        while True:
+            massage = input(message01)
+            try:
+                massage = int(massage)
+            except Exception:
+                print(message02)
+                continue
+            return massage
+
+
+class ShoppingCarView:
+    """
+        购物车管理视图
+    """
+    def __init__(self):
+        self.__car_manager = ShoppingCarManagerController()
+        self.__commodity_manager = CommodityManagerController()
+
+    def __display_menu(self):
+        """
+            菜单
+        """
+        menu = """
+        1、将商品添加到购物车
+        2、将商品从购物车中移除
+        3、查看购物车
+        4、结算
+        5、支付
+        """
+        print(menu)
+
+    def __select_menu(self):
+        """
+            输入快捷键
+        """
+        item = input("请输入菜单快捷键:")
+        if item == "1":
+            self.__add_shopping_car()
+        elif item == "2":
+            self.__delete_shopping_car()
+        elif item == "3":
+            self.__output_shopping_car(self.__car_manager.car_list)
+        elif item == "4":
+            self.__total_money()
+        elif item == "5":
+            self.__pay()
+        elif item == "q" or item == "Q":
+            return -1
+
+    def main(self):
+        """
+            购物车入口
+        """
+        while True:
+            self.__display_menu()
+            if self.__select_menu() == -1:
+                print("退出购物车")
+                break
+
+    def __add_shopping_car(self):
+        """
+            添加购物车
+        """
+        com_id = self.__check_id_error()
+        print(com_id, type(com_id))
+        count = Tool.input_message_error("输入购买数量:", "提示:购买数量输入有误!")
+        self.__car_manager.add_car(com_id, count)
+
+    def __delete_shopping_car(self):
+        """
+            根据商品编号从购物车中移除商品
+        """
+        com_id = self.__check_id_error()
+        count = Tool.input_message_error("输入移除数量:", "提示:移除数量输入有误!")
+        if self.__car_manager.remove_car(com_id, count):
+            print("移除成功！")
+        else:
+            print("移除失败！")
+
+    def __check_id_error(self):
+        while True:
+            com_id = Tool.input_message_error("输入商品编号:", "提示:商品编号输入有误!")
+            try:
+                self.__commodity_manager.search_commodity(com_id)
+            except Exception:
+                print("商品编号不存在!")
+                continue
+            return com_id
+
+    def __output_shopping_car(self, target_list):
+        """
+            输出购物车列表
+        """
+        for shopping_car in target_list:
+            print(shopping_car.id, shopping_car.name, shopping_car.price, shopping_car.count)
+
+    def __total_money(self):
+        """
+            输出结算金额
+        """
+        money = self.__car_manager.close_an_account()
+        if money:
+            print("合计:%d" % money)
+        else:
+            print("购物车为空！")
+
+    def __pay(self):
+        """
+            输入支付金额查看支付结果
+        """
+        if self.__car_manager.close_an_account():
+            pay_money = Tool.input_message_error("输入支付金额:", "提示:支付金额输入有误!")
+            if self.__car_manager.pay_money(pay_money) == 0:
+                print("支付成功！")
+            elif self.__car_manager.pay_money(pay_money) == -1:
+                print("支付失败，金额不足！")
+            else:
+                print("支付成功，找零%d" % self.__car_manager.pay_money(pay_money))
+        else:
+            print("未购买任何商品！")
+
+
+class NavigationView:
+    """
+        导航视图
+    """
+    def __init__(self):
+        self.__commodity_main = CommodityManagerView()
+        self.__shopping_car_main = ShoppingCarView()
+
+    def __display_menu(self):
+        """
+            菜单
+        """
+        menu = """
+        1、进入后台添加商品
+        2、进入购物车列表
+        """
+        print(menu)
+
+    def __select_menu(self):
+        """
+            输入快捷键
+        """
+        item = input("请输入菜单快捷键:")
+        if item == "1":
+            self.__commodity_main.main()
+        elif item == "2":
+            self.__shopping_car_main.main()
+        elif item == "q" or item == "Q":
+            return -1
+
+    def main(self):
+        """
+            总入口
+        """
+        while True:
+            self.__display_menu()
+            if self.__select_menu() == -1:
+                print("退出")
+                break
+
+
+view = NavigationView()
+view.main()
+
+
+
+
