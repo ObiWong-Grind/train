@@ -370,19 +370,6 @@ class CommodityManagerView:
                 continue
             return com_id
 
-    def __input_message_error(self, message01, message02):
-        """
-            验证相关信息
-        """
-        while True:
-            massage = input(message01)
-            try:
-                massage = float(massage)
-            except Exception:
-                print(message02)
-                continue
-            return massage
-
     def __output_commodity(self, target_list):
         """
             输出商品列表
