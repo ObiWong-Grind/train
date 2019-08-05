@@ -387,7 +387,6 @@ class ShoppingCarView:
             添加购物车
         """
         com_id = self.__check_id_error()
-        print(com_id, type(com_id))
         count = Tool.input_message_error("输入购买数量:", "提示:购买数量输入有误!")
         self.__car_manager.add_car(com_id, count)
 
