@@ -222,6 +222,83 @@ class ShoppingCarManagerController:
             return 0
 
 
+class Error:
+    """
+        错误父类
+    """
+    def __init__(self, message01, message02):
+        self.message01 = message01
+        self.message02 = message02
+
+    @property
+    def message01(self):
+        return self.__message01
+
+    @message01.setter
+    def message01(self, value):
+        self.__message01 = value
+
+    @property
+    def message02(self):
+        return self.__message02
+
+    @message02.setter
+    def message02(self, value):
+        self.__message02 = value
+
+    def report_an_error(self):
+        raise NotImplementedError()
+
+
+class MessageError(Error):
+    """
+        信息输入验证
+    """
+    def __init__(self, message01, message02, target_type):
+        super().__init__(message01, message02)
+        self.target_type = target_type
+
+    @property
+    def target_type(self):
+        return self.__target_type
+
+    @target_type.setter
+    def target_type(self, value):
+        self.__target_type = value
+
+    def report_an_error(self):
+        """
+            验证相关信息
+        """
+        while True:
+            message = input(self.message01)
+            try:
+                message = eval(self.target_type)(message)
+            except Exception:
+                print(self.message02)
+                continue
+            return message
+
+
+class KeyError(Error):
+    """
+        按键信息验证
+    """
+    def __init__(self, message01, message02):
+        super().__init__(message01, message02)
+
+    def report_an_error(self):
+        while True:
+            key = input(self.message01)
+            try:
+                if key not in self.message02:
+                    raise ValueError
+            except Exception:
+                print("提示:输入的键值不符合要求!")
+                continue
+            return key
+
+
 class CommodityManagerView:
     """
         商品管理视图
@@ -244,7 +321,7 @@ class CommodityManagerView:
         """
             输入快捷键
         """
-        item = input("请输入菜单快捷键:")
+        item = KeyError("请输入菜单快捷键:", ("1", "2", "3", "q", "Q")).report_an_error()
         if item == "1":
             self.__input_commodity()
         elif item == "2":
@@ -269,7 +346,7 @@ class CommodityManagerView:
             输入商品
         """
         name = input("请输入商品名称:")
-        price = self.__input_message_error("输入商品价格:", "提示:商品价格输入有误!")
+        price = MessageError("输入商品价格:", "提示:商品价格输入有误!", "float").report_an_error()
         commodity = CommodityModel(name, price)
         self.__commodity_manager.add_commodity(commodity)
 
@@ -285,7 +362,7 @@ class CommodityManagerView:
 
     def __check_id_error(self):
         while True:
-            com_id = Tool.input_message_error("输入商品编号:", "提示:商品编号输入有误!")
+            com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
             try:
                 self.__commodity_manager.search_commodity(com_id)
             except Exception:
@@ -314,25 +391,6 @@ class CommodityManagerView:
             print(commodity.id, commodity.name, commodity.price)
 
 
-class Tool:
-    """
-        常用小工具
-    """
-    @staticmethod
-    def input_message_error(message01, message02):
-        """
-            验证相关信息
-        """
-        while True:
-            massage = input(message01)
-            try:
-                massage = int(massage)
-            except Exception:
-                print(message02)
-                continue
-            return massage
-
-
 class ShoppingCarView:
     """
         购物车管理视图
@@ -358,7 +416,7 @@ class ShoppingCarView:
         """
             输入快捷键
         """
-        item = input("请输入菜单快捷键:")
+        item = KeyError("输入菜单快捷键:", ("1", "2", "3", "4", "5", "q", "Q")).report_an_error()
         if item == "1":
             self.__add_shopping_car()
         elif item == "2":
@@ -387,7 +445,7 @@ class ShoppingCarView:
             添加购物车
         """
         com_id = self.__check_id_error()
-        count = Tool.input_message_error("输入购买数量:", "提示:购买数量输入有误!")
+        count = MessageError("输入购买数量:", "提示:购买数量输入有误!", "int").report_an_error()
         self.__car_manager.add_car(com_id, count)
 
     def __delete_shopping_car(self):
@@ -395,7 +453,7 @@ class ShoppingCarView:
             根据商品编号从购物车中移除商品
         """
         com_id = self.__check_id_error()
-        count = Tool.input_message_error("输入移除数量:", "提示:移除数量输入有误!")
+        count = MessageError("输入移除数量:", "提示:移除数量输入有误!", "int").report_an_error()
         if self.__car_manager.remove_car(com_id, count):
             print("移除成功！")
         else:
@@ -403,7 +461,7 @@ class ShoppingCarView:
 
     def __check_id_error(self):
         while True:
-            com_id = Tool.input_message_error("输入商品编号:", "提示:商品编号输入有误!")
+            com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
             try:
                 self.__commodity_manager.search_commodity(com_id)
             except Exception:
@@ -433,7 +491,7 @@ class ShoppingCarView:
             输入支付金额查看支付结果
         """
         if self.__car_manager.close_an_account():
-            pay_money = Tool.input_message_error("输入支付金额:", "提示:支付金额输入有误!")
+            pay_money = MessageError("输入支付金额:", "提示:支付金额输入有误!", "int").report_an_error()
             if self.__car_manager.pay_money(pay_money) == 0:
                 print("支付成功！")
             elif self.__car_manager.pay_money(pay_money) == -1:
@@ -466,7 +524,7 @@ class NavigationView:
         """
             输入快捷键
         """
-        item = input("请输入菜单快捷键:")
+        item = KeyError("请输入菜单快捷键:", ("1", "2", "q", "Q")).report_an_error()
         if item == "1":
             self.__commodity_main.main()
         elif item == "2":
