@@ -1,4 +1,4 @@
-# Study record
+# Study
 
 How many days to learn Python3
 
