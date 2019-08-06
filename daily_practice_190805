@@ -294,12 +294,18 @@ class KeyError(Error):
         while True:
             key = input(self.message01)
             try:
-                if key not in self.message02:
-                    raise ValueError
+                self.__find_content(key)
             except Exception:
                 print("提示:输入的键值不符合要求!")
                 continue
             return key
+    
+    def __find_content(self, key):
+    """
+        查找输入的值是否在相关范围内
+    """
+    if key not in self.message02:
+        raise ValueError
 
 
 class CommodityManagerView:
