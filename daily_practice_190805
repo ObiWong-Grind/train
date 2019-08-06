@@ -227,6 +227,11 @@ class Error:
         错误父类
     """
     def __init__(self, message01, message02):
+        """
+            相关内容
+        :param message01: 输入的内容
+        :param message02: 提示的内容
+        """
         self.message01 = message01
         self.message02 = message02
 
@@ -255,6 +260,12 @@ class MessageError(Error):
         信息输入验证
     """
     def __init__(self, message01, message02, target_type):
+        """
+            相关内容
+        :param message01: 输入的内容
+        :param message02: 提示的内容
+        :param target_type: 需要转换的类型, str型 输入的为"int" or "float"
+        """
         super().__init__(message01, message02)
         self.target_type = target_type
 
@@ -284,8 +295,23 @@ class KeyError(Error):
     """
         按键信息验证
     """
-    def __init__(self, message01, message02):
+    def __init__(self, message01, message02, message03):
+        """
+            相关内容
+        :param message01: 输入的内容
+        :param message02: 提示的内容
+        :param message03: 传入一个键值元组 or 列表，元素为str型
+        """
         super().__init__(message01, message02)
+        self.message03 = message03
+        
+    @property
+    def message03(self):
+        return self.__message03
+
+    @message03.setter
+    def message03(self, value):
+        self.__message03 = value
 
     def report_an_error(self):
         """
@@ -296,7 +322,7 @@ class KeyError(Error):
             try:
                 self.__find_content(key)
             except Exception:
-                print("提示:输入的键值不符合要求!")
+                print(self.message02)
                 continue
             return key
     
@@ -304,7 +330,7 @@ class KeyError(Error):
     """
         查找输入的值是否在相关范围内
     """
-    if key not in self.message02:
+    if key not in self.message03:
         raise ValueError
 
 
@@ -330,7 +356,7 @@ class CommodityManagerView:
         """
             输入快捷键
         """
-        item = KeyError("请输入菜单快捷键:", ("1", "2", "3", "q", "Q")).report_an_error()
+        item = KeyError("请输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "3", "q", "Q")).report_an_error()
         if item == "1":
             self.__input_commodity()
         elif item == "2":
@@ -412,7 +438,7 @@ class ShoppingCarView:
         """
             输入快捷键
         """
-        item = KeyError("输入菜单快捷键:", ("1", "2", "3", "4", "5", "q", "Q")).report_an_error()
+        item = KeyError("输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "3", "4", "5", "q", "Q")).report_an_error()
         if item == "1":
             self.__add_shopping_car()
         elif item == "2":
@@ -520,7 +546,7 @@ class NavigationView:
         """
             输入快捷键
         """
-        item = KeyError("请输入菜单快捷键:", ("1", "2", "q", "Q")).report_an_error()
+        item = KeyError("请输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "q", "Q")).report_an_error()
         if item == "1":
             self.__commodity_main.main()
         elif item == "2":
