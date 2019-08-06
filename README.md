@@ -1,5 +1,6 @@
 # Study record
 
+How many days to learn Python3
 
     import time
 
