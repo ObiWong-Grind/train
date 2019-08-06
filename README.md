@@ -1,6 +1,6 @@
 # Study
 
-How many days to learn Python3
+How many days to learn Python3?
 
     import time
 
