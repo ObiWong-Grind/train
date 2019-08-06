@@ -21,16 +21,16 @@ How many days to learn Python3
 
         def __get_seconds(self):
             """
-                计算学习的总秒数
-            :return: 返回总秒数 int
+                计算总秒数
+            :return: 总秒数 int
             """
             self.tuple_time = time.strptime("%d年%d月%d日" % (self.year, self.mouth, self.day), "%Y年%m月%d日")
             return int(time.time() - time.mktime(self.tuple_time))
 
         def learn_days(self):
             """
-                计算学习的总天数
-            :return: 天数 int
+                计算总天数
+            :return: 总天数 int
             """
             seconds = self.__get_seconds()
             return seconds // (24 * 60 ** 2)
