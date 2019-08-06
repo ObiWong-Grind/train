@@ -1,4 +1,4 @@
-# Study schedule
+# Study record
 
 
 import time
