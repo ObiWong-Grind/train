@@ -288,6 +288,9 @@ class KeyError(Error):
         super().__init__(message01, message02)
 
     def report_an_error(self):
+        """
+            验证相关信息
+        """
         while True:
             key = input(self.message01)
             try:
