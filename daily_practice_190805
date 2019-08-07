@@ -202,9 +202,7 @@ class ShoppingCarManagerController:
         aggregate = 0
         for commodity in self.__car_list:
             aggregate += commodity.price * commodity.count
-        if aggregate > 0:
-            return aggregate
-        return None
+        return aggregate
 
     def pay_money(self, money=0):
         """
@@ -212,12 +210,12 @@ class ShoppingCarManagerController:
         :param money: 支付的金额 int
         :return: -1 支付失败金额不足, 0 支付成功金额正好, 剩余的就是支付成功且找零
         """
-        rental = self.close_an_account()
-        if money - rental > 0:
-            return money - rental
-        elif money - rental < 0:
+        aggregate = self.close_an_account()
+        if money - aggregate > 0:
+            return money - aggregate
+        elif money - aggregate < 0:
             return -1
-        elif money - rental == 0:
+        elif money - aggregate == 0:
             return 0
 
 
@@ -502,7 +500,7 @@ class ShoppingCarView:
             输出结算金额
         """
         money = self.__car_manager.close_an_account()
-        if money:
+        if money > 0:
             print("合计:%d" % money)
         else:
             print("购物车为空！")
