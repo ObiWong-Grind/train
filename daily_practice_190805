@@ -513,7 +513,7 @@ class ShoppingCarView:
             输入支付金额查看支付结果
         """
         if self.__car_manager.close_an_account():
-            pay_money = MessageError("输入支付金额:", "提示:支付金额输入有误!", "int").report_an_error()
+            pay_money = MessageError("输入支付金额:", "提示:支付金额输入有误!", "float").report_an_error()
             if self.__car_manager.pay_money(pay_money) == 0:
                 print("支付成功！")
             elif self.__car_manager.pay_money(pay_money) == -1:
