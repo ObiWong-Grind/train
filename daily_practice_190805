@@ -204,8 +204,7 @@ class ShoppingCarManagerController:
             aggregate += commodity.price * commodity.count
         if aggregate > 0:
             return aggregate
-        else:
-            return None
+        return None
 
     def pay_money(self, money=0):
         """
