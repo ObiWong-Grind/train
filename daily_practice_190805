@@ -272,6 +272,8 @@ class MessageError(Error):
 
     @target_type.setter
     def target_type(self, value):
+        if value not in ("int", "float"):
+            raise ValueError("让传 'int' or 'float' 就要听话")
         self.__target_type = value
 
     def report_an_error(self):
