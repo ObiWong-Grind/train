@@ -203,18 +203,30 @@ class ShoppingCarManagerController:
             按照商品id将商品添加进购物车列表
         :param com_id: 商品id int
         :param count: 购买的数量
-        :return: 如果数据库中没有这个商品，返回None
         """
         commodity, car_commodity = self.__manager.search_commodity(com_id), self.search_car_commodity(com_id)
         if commodity and car_commodity is False:
-            shopping = ShoppingCarModel()
-            shopping.name, shopping.price, shopping.count, shopping.id = commodity.name, commodity.price, count, commodity.id
-            self.__car_list.append(shopping)
-            return True
+            return self.__add_new_car(commodity, com_id, count)
         if car_commodity is not False:
-            car_commodity.count += count
-            return True
+            return self.__accumulation_old_car(car_commodity, com_id, count)
         return False
+    
+    def __add_new_car(self, commodity, com_id, count):
+        """
+            当购物车中没有相同id的商品时, 往购物车内新增该商品, 同时想数据库请求减去相同id商品的库存
+        """
+        shopping = ShoppingCarModel()
+        shopping.name, shopping.price, shopping.count, shopping.id = commodity.name, commodity.price, count, commodity.id
+        self.__car_list.append(shopping)
+        self.__manager.update_inventory(com_id, -count)
+    
+    def __accumulation_old_car(self, car_commodity, com_id, count):
+        """
+            当购物车内有相同id的商品时, 往累加数量, 同时想数据库请求减去相同id商品的库存
+        """
+        car_commodity.count += count
+        self.__manager.update_inventory(com_id, -count)
+        return True
 
     def remove_car(self, com_id, count=1):
         """
