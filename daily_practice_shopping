@@ -57,7 +57,18 @@ class CommodityModel:
 commodity_database = []
 
 
-class CommodityManagerController:
+class CommodityFatherController:
+    """
+        
+    """
+    def search_commodity(self, com_id):
+        raise NotImplementedError()
+
+    def update_inventory(self, com_id, count):
+        raise NotImplementedError()
+
+
+class CommodityManagerController(CommodityFatherController):
     """
         商品管理控制器，负责业务逻辑处理
     """
@@ -192,7 +203,6 @@ class ShoppingCarManagerController:
     """
     def __init__(self):
         self.__car_list = car_database
-        self.__manager = CommodityManagerController()
 
     @property
     def car_list(self):
@@ -204,7 +214,8 @@ class ShoppingCarManagerController:
         :param com_id: 商品id int
         :param count: 购买的数量
         """
-        commodity, car_commodity = self.__manager.search_commodity(com_id), self.search_car_commodity(com_id)
+        commodity = CommodityManagerController().search_commodity(com_id)
+        car_commodity = self.search_car_commodity(com_id)
         if commodity and car_commodity is False:
             return self.__add_new_car(commodity, com_id, count)
         if car_commodity is not False:
@@ -218,7 +229,7 @@ class ShoppingCarManagerController:
         shopping = ShoppingCarModel()
         shopping.name, shopping.price, shopping.count, shopping.id = commodity.name, commodity.price, count, commodity.id
         self.__car_list.append(shopping)
-        self.__manager.update_inventory(com_id, -count)
+        CommodityManagerController().update_inventory(com_id, -count)
         return True
     
     def __accumulation_old_car(self, car_commodity, com_id, count):
@@ -226,7 +237,7 @@ class ShoppingCarManagerController:
             当购物车内有相同id的商品时, 往累加数量, 同时想数据库请求减去相同id商品的库存
         """
         car_commodity.count += count
-        self.__manager.update_inventory(com_id, -count)
+        CommodityManagerController().update_inventory(com_id, -count)
         return True
 
     def remove_car(self, com_id, count=1):
@@ -240,7 +251,7 @@ class ShoppingCarManagerController:
             if commodity.id == com_id:
                 commodity.count -= count
                 if commodity.count == 0:
-                    self.__del_car(com_id)
+                    CommodityManagerController().update_inventory(com_id, count)
                 return True
         return False
     
@@ -546,7 +557,6 @@ class ShoppingCarView:
     """
     def __init__(self):
         self.__car_manager = ShoppingCarManagerController()
-        self.__commodity_manager = CommodityManagerController()
 
     def __display_menu(self):
         """
@@ -593,7 +603,7 @@ class ShoppingCarView:
         """
             添加购物车
         """
-        com_id = self.__check_id_from_commodity()
+        com_id = self.__check_from_commodity()
         count = ValueMinusError("输入购买数量:", "提示:购买数量输入有误!").report_an_error()
         if self.__car_manager.add_car(com_id, count):
             print("添加成功！")
@@ -604,24 +614,24 @@ class ShoppingCarView:
         """
             根据商品编号从购物车中移除商品
         """
-        com_id = self.__check_id_from_car()
+        com_id = self.__check_from_car()
         count = ValueMinusError("输入移除数量:", "提示:移除数量输入有误!").report_an_error()
         if self.__car_manager.remove_car(com_id, count):
             print("移除成功！")
         else:
             print("移除失败！")
 
-    def __check_id_from_commodity(self):
+    def __check_from_commodity(self):
         """
             核对输入的商品id是否在商品列表中
         """
         while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if self.__commodity_manager.search_commodity(com_id):
+            if CommodityManagerController().search_commodity(com_id):
                 return com_id
             print("提示:商品编号不存在!")
     
-    def __check_id_from_car(self):
+    def __check_from_car(self):
         """
             核对输入的商品id是否存在于购物车中
         """
