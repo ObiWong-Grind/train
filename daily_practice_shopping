@@ -219,6 +219,7 @@ class ShoppingCarManagerController:
         shopping.name, shopping.price, shopping.count, shopping.id = commodity.name, commodity.price, count, commodity.id
         self.__car_list.append(shopping)
         self.__manager.update_inventory(com_id, -count)
+        return True
     
     def __accumulation_old_car(self, car_commodity, com_id, count):
         """
@@ -706,6 +707,7 @@ class NavigationView:
 
 view = NavigationView()
 view.main()
+
 
 
 
