@@ -59,7 +59,7 @@ commodity_database = []
 
 class CommodityFatherController:
     """
-        
+        迪米特法则是这么要求的，其实个人觉得过了
     """
     def search_commodity(self, com_id):
         raise NotImplementedError()
