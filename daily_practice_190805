@@ -14,15 +14,17 @@ class CommodityModel:
     """
         商品数据模型，包含id, name, price
     """
-    def __init__(self, name="", price=0.0, commodity_id=0):
+    def __init__(self, name="", price=0.0, inventory=0, commodity_id=0):
         """
             创建商品对象
         :param name: 商品名称 str
         :param price: 商品价格 float
+        :param inventory: 商品库存 int
         :param commodity_id: 商品唯一标示 int
         """
         self.name = name
         self.price = price
+        self.inventory = inventory
         self.id = commodity_id
 
     @property
@@ -40,7 +42,17 @@ class CommodityModel:
     @price.setter
     def price(self, value):
         self.__price = value
+    
+    @property
+    def inventory(self):
+        return self.__inventory
 
+    @inventory.setter
+    def inventory(self, value):
+        if value < 0:
+            raise ValueError()
+        self.__inventory = value
+    
 
 commodity_database = []
 
@@ -97,7 +109,25 @@ class CommodityManagerController:
                 self.__com_list.remove(commodity)
                 return True
         return False
+    
+    def get_inventory_less(self, value):
+        """
+            将库存小于要求的商品返回
+        :param value: 数值 int
+        """
+        for item in self.com_list:
+            if item.inventory < value:
+                yield item
 
+    def get_inventory_greater(self, value):
+        """
+            将库存大于要求的商品返回
+        :param value: 数值 int
+        """
+        for item in self.com_list:
+            if item.inventory > value:
+                yield item
+    
 
 class ShoppingCarModel:
     """
@@ -333,6 +363,29 @@ class KeyError(Error):
         raise ValueError
 
 
+class ValueMinusError(Error):
+    """
+        验证数值大小错误
+    """
+    def __init__(self, message01, message02):
+        super().__init__(message01, message02)
+
+    def report_an_error(self):
+        """
+            验证相关信息
+        """
+        while True:
+            value = input(self.message01)
+            try:
+                value = int(value)
+                if value < 0:
+                    raise ValueError()
+            except Exception:
+                print(self.message02)
+                continue
+            return value
+
+
 class CommodityManagerView:
     """
         商品管理视图
@@ -347,7 +400,8 @@ class CommodityManagerView:
         menu = """
         1、添加商品
         2、查看商品
-        3、删除商品
+        3、盘点库存
+        4、删除商品
         """
         print(menu)
 
@@ -355,12 +409,14 @@ class CommodityManagerView:
         """
             输入快捷键
         """
-        item = KeyError("请输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "3", "q", "Q")).report_an_error()
+        item = KeyError("请输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "3", "4", "q", "Q")).report_an_error()
         if item == "1":
             self.__input_commodity()
         elif item == "2":
             self.__output_commodity(self.__commodity_manager.com_list)
         elif item == "3":
+            self.__check_inventory()
+        elif item == "4":
             self.__delete_commodity()
         elif item == "q" or item == "Q":
             return -1
@@ -381,7 +437,8 @@ class CommodityManagerView:
         """
         name = input("请输入商品名称:")
         price = MessageError("输入商品价格:", "提示:商品价格输入有误!", "float").report_an_error()
-        commodity = CommodityModel(name, price)
+        inventory = ValueMinusError("输入商品库存:", "提示:商品库存输入有误!").report_an_error()
+        commodity = CommodityModel(name, price, inventory)
         self.__commodity_manager.add_commodity(commodity)
 
     def __delete_commodity(self):
@@ -409,7 +466,21 @@ class CommodityManagerView:
             输出商品列表
         """
         for commodity in target_list:
-            print(commodity.id, commodity.name, commodity.price)
+            self.__print_commodity(commodity)
+    
+    def __check_inventory(self):
+        """
+            盘点库存
+        """
+        inventory = ValueMinusError("输入库存小于多少的商品:", "提示:数值输入有误!").report_an_error()
+        for commodity in self.__commodity_manager.get_inventory_less(inventory):
+            self.__print_commodity(commodity)
+
+    def __print_commodity(self, commodity):
+        """
+            打印商品
+        """
+        print(commodity.id, commodity.name, commodity.price, commodity.inventory)
 
 
 class ShoppingCarView:
@@ -466,7 +537,7 @@ class ShoppingCarView:
             添加购物车
         """
         com_id = self.__check_id_error()
-        count = MessageError("输入购买数量:", "提示:购买数量输入有误!", "int").report_an_error()
+        count = ValueMinusError("输入购买数量:", "提示:购买数量输入有误!").report_an_error()
         self.__car_manager.add_car(com_id, count)
 
     def __delete_shopping_car(self):
@@ -474,7 +545,7 @@ class ShoppingCarView:
             根据商品编号从购物车中移除商品
         """
         com_id = self.__check_id_error()
-        count = MessageError("输入移除数量:", "提示:移除数量输入有误!", "int").report_an_error()
+        count = ValueMinusError("输入移除数量:", "提示:移除数量输入有误!").report_an_error()
         if self.__car_manager.remove_car(com_id, count):
             print("移除成功！")
         else:
