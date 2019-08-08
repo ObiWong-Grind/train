@@ -95,8 +95,7 @@ class CommodityManagerController:
         for commodity in self.__com_list:
             if commodity.id == com_id:
                 return commodity.name, commodity.price, commodity.id
-        else:
-            raise ValueError()
+        raise ValueError()
 
     def remove_commodity(self, com_id):
         """
