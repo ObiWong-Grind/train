@@ -90,7 +90,7 @@ class CommodityManagerController:
         """
             根据商品id查找商品
         :param com_id: 商品id int
-        :return: 返回 (name, price, id)形式的元组
+        :return: 返回商品对象, False 没有该商品
         """
         for commodity in self.__com_list:
             if commodity.id == com_id:
@@ -230,7 +230,18 @@ class ShoppingCarManagerController:
                     self.__del_car(com_id)
                 return True
         return False
-
+    
+    def search_car_commodity(self, com_id):
+        """
+            根据商品id查找购物车中商品
+        :param com_id: 商品id int
+        :return: 返回购物车商品对象，False 没有商品
+        """
+        for commodity in self.__car_list:
+            if commodity.id == com_id:
+                return commodity
+        return False
+    
     def __del_car(self, com_id):
         """
             根据商品id删除购物车中的商品
@@ -683,6 +694,7 @@ class NavigationView:
 
 view = NavigationView()
 view.main()
+
 
 
 
