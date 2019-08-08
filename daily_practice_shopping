@@ -94,8 +94,8 @@ class CommodityManagerController:
         """
         for commodity in self.__com_list:
             if commodity.id == com_id:
-                return commodity.name, commodity.price, commodity.id
-        raise ValueError()
+                return commodity
+        return False
 
     def remove_commodity(self, com_id):
         """
@@ -126,6 +126,19 @@ class CommodityManagerController:
         for item in self.com_list:
             if item.inventory > value:
                 yield item
+    
+    def update_inventory(self, com_id, count):
+        """
+            修改库存
+        :param com_id: 商品id
+        :param count: 修改数量
+        :return: True 修改成功, False 修改失败
+        """
+        for commodity in self.__com_list:
+            if commodity.id == com_id and commodity.inventory + count > 0:
+                commodity.inventory += count
+                return True
+        return False
     
 
 class ShoppingCarModel:
@@ -170,12 +183,15 @@ class ShoppingCarModel:
         self.__count = value
 
 
+car_database = []
+
+
 class ShoppingCarManagerController:
     """
         购物车管理控制器，负责业务逻辑处理
     """
     def __init__(self):
-        self.__car_list = []
+        self.__car_list = car_database
         self.__manager = CommodityManagerController()
 
     @property
@@ -189,12 +205,16 @@ class ShoppingCarManagerController:
         :param count: 购买的数量
         :return: 如果数据库中没有这个商品，返回None
         """
-        re = self.__manager.search_commodity(com_id)
-        if re:
-            car_manager = ShoppingCarModel()
-            car_manager.name, car_manager.price, car_manager.count, car_manager.id =\
-                re[0], re[1], count, re[2]
-            self.__car_list.append(car_manager)
+        commodity, car_commodity = self.__manager.search_commodity(com_id), self.search_car_commodity(com_id)
+        if commodity and car_commodity is False:
+            shopping = ShoppingCarModel()
+            shopping.name, shopping.price, shopping.count, shopping.id = commodity.name, commodity.price, count, commodity.id
+            self.__car_list.append(shopping)
+            return True
+        if car_commodity is not False:
+            car_commodity.count += count
+            return True
+        return False
 
     def remove_car(self, com_id, count=1):
         """
@@ -396,19 +416,20 @@ class CommodityManagerView:
         """
             菜单
         """
-        menu = """
-        1、添加商品
-        2、查看商品
-        3、盘点库存
-        4、删除商品
-        """
-        print(menu)
+        print()
+        print("1、添加商品")
+        print("2、查看商品")
+        print("3、盘点库存")
+        print("4、修改库存")
+        print("5、删除商品")
+        print("q、退出")
+        print()
 
     def __select_menu(self):
         """
             输入快捷键
         """
-        item = KeyError("请输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "3", "4", "q", "Q")).report_an_error()
+        item = KeyError("输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "3", "4", "5", "q", "Q")).report_an_error()
         if item == "1":
             self.__input_commodity()
         elif item == "2":
@@ -416,6 +437,8 @@ class CommodityManagerView:
         elif item == "3":
             self.__check_inventory()
         elif item == "4":
+            self.__update_inventory()
+        elif item == "5":
             self.__delete_commodity()
         elif item == "q" or item == "Q":
             return -1
@@ -440,26 +463,6 @@ class CommodityManagerView:
         commodity = CommodityModel(name, price, inventory)
         self.__commodity_manager.add_commodity(commodity)
 
-    def __delete_commodity(self):
-        """
-            根据商品编号数据库中移除商品
-        """
-        com_id = self.__check_id_error()
-        if self.__commodity_manager.remove_commodity(com_id):
-            print("移除成功！")
-        else:
-            print("移除失败！")
-
-    def __check_id_error(self):
-        while True:
-            com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            try:
-                self.__commodity_manager.search_commodity(com_id)
-            except Exception:
-                print("商品编号不存在!")
-                continue
-            return com_id
-
     def __output_commodity(self, target_list):
         """
             输出商品列表
@@ -474,7 +477,38 @@ class CommodityManagerView:
         inventory = ValueMinusError("输入库存小于多少的商品:", "提示:数值输入有误!").report_an_error()
         for commodity in self.__commodity_manager.get_inventory_less(inventory):
             self.__print_commodity(commodity)
-
+    
+    def __update_inventory(self):
+        """
+            根据商品编号在数据库中修改库存
+        """
+        com_id = self.__check_id()
+        count = MessageError("输入修改数量:", "提示:修改数量输入有误!", "int").report_an_error()
+        if self.__commodity_manager.update_inventory(com_id, count):
+            print("修改成功！")
+        else:
+            print("修改失败！")
+    
+    def __delete_commodity(self):
+        """
+            根据商品编号在数据库中移除商品
+        """
+        com_id = self.__check_id()
+        if self.__commodity_manager.remove_commodity(com_id):
+            print("移除成功！")
+        else:
+            print("移除失败！")
+    
+    def __check_id(self):
+        """
+            核对输入的商品id是否存在于数据库中
+        """
+        while True:
+            com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
+            if self.__commodity_manager.search_commodity(com_id):
+                return com_id
+            print("提示:商品编号不存在!")
+    
     def __print_commodity(self, commodity):
         """
             打印商品
@@ -494,14 +528,14 @@ class ShoppingCarView:
         """
             菜单
         """
-        menu = """
-        1、将商品添加到购物车
-        2、将商品从购物车中移除
-        3、查看购物车
-        4、结算
-        5、支付
-        """
-        print(menu)
+        print()
+        print("1、将商品添加到购物车")
+        print("2、将商品从购物车中移除")
+        print("3、查看购物车")
+        print("4、结算")
+        print("5、支付")
+        print("q、退出")
+        print()
 
     def __select_menu(self):
         """
@@ -535,30 +569,43 @@ class ShoppingCarView:
         """
             添加购物车
         """
-        com_id = self.__check_id_error()
+        com_id = self.__check_id_from_commodity()
         count = ValueMinusError("输入购买数量:", "提示:购买数量输入有误!").report_an_error()
-        self.__car_manager.add_car(com_id, count)
+        if self.__car_manager.add_car(com_id, count):
+            print("添加成功！")
+        else:
+            print("添加失败！")
 
     def __delete_shopping_car(self):
         """
             根据商品编号从购物车中移除商品
         """
-        com_id = self.__check_id_error()
+        com_id = self.__check_id_from_car()
         count = ValueMinusError("输入移除数量:", "提示:移除数量输入有误!").report_an_error()
         if self.__car_manager.remove_car(com_id, count):
             print("移除成功！")
         else:
             print("移除失败！")
 
-    def __check_id_error(self):
+    def __check_id_from_commodity(self):
+        """
+            核对输入的商品id是否在商品列表中
+        """
         while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            try:
-                self.__commodity_manager.search_commodity(com_id)
-            except Exception:
-                print("商品编号不存在!")
-                continue
-            return com_id
+            if self.__commodity_manager.search_commodity(com_id):
+                return com_id
+            print("提示:商品编号不存在!")
+    
+    def __check_id_from_car(self):
+        """
+            核对输入的商品id是否存在于购物车中
+        """
+        while True:
+            com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
+            if self.__car_manager.search_car_commodity(com_id):
+                return com_id
+            print("提示:商品编号不在购物车内!")
 
     def __output_shopping_car(self, target_list):
         """
@@ -605,11 +652,11 @@ class NavigationView:
         """
             菜单
         """
-        menu = """
-        1、进入后台添加商品
-        2、进入购物车列表
-        """
-        print(menu)
+        print()
+        print("1、进入后台添加商品")
+        print("2、进入购物车列表")
+        print("q、退出")
+        print()
 
     def __select_menu(self):
         """
@@ -636,7 +683,6 @@ class NavigationView:
 
 view = NavigationView()
 view.main()
-
 
 
 
