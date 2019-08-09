@@ -122,28 +122,25 @@ class CommodityManagerController:
             if func_inventory(commodity, value):
                 yield commodity
     
-    def search_com(self, commodity):
+    def search_com(self, com_id):
         """
-            查找库中商品
-        """
-        return commodity
-
-    def remove_com(self, commodity):
-        """
-            移除库中商品
-        """
-        self.__com_list.remove(commodity)
-        return True
-
-    def operate_com(self, func_operate, com_id):
-        """
-            根据商品id查找商品进行后续操作
-        :param func_operate: 方法
+            根据商品id查找商品
         :param com_id: 商品id
         """
         for commodity in self.__com_list:
             if commodity.id == com_id:
-                return func_operate(commodity)
+                return commodity
+        return False
+
+    def remove_com(self, com_id):
+        """
+            根据商品id移除商品
+        :param com_id: 商品id
+        """
+        for commodity in self.__com_list:
+            if commodity.id == com_id:
+                self.__com_list.remove(commodity)
+                return True
         return False
 
 
@@ -211,7 +208,7 @@ class ShoppingCarManagerController:
         :param com_id: 商品id int
         :param count: 购买的数量
         """
-        commodity = self.__com_manager.operate_com(self.__com_manager.search_com, com_id)
+        commodity = self.__com_manager.search_com(com_id)
         car_commodity = self.search_car_commodity(com_id)
         if commodity and car_commodity is False:
             return self.__add_new_car(commodity, com_id, count)
@@ -253,17 +250,6 @@ class ShoppingCarManagerController:
                 return True
         return False
     
-    def search_car_commodity(self, com_id):
-        """
-            根据商品id查找购物车中商品
-        :param com_id: 商品id int
-        :return: 返回购物车商品对象，False 没有商品
-        """
-        for commodity in self.__car_list:
-            if commodity.id == com_id:
-                return commodity
-        return False
-    
     def __del_car(self, com_id):
         """
             根据商品id删除购物车中的商品
@@ -274,6 +260,17 @@ class ShoppingCarManagerController:
             if commodity.id == com_id:
                 self.__car_list.remove(commodity)
                 return True
+        return False
+    
+    def search_car_commodity(self, com_id):
+        """
+            根据商品id查找购物车中商品
+        :param com_id: 商品id int
+        :return: 返回购物车商品对象，False 没有商品
+        """
+        for commodity in self.__car_list:
+            if commodity.id == com_id:
+                return commodity
         return False
 
     def close_an_account(self):
@@ -529,7 +526,7 @@ class CommodityManagerView:
             根据商品编号在数据库中移除商品
         """
         com_id = self.__check_id()
-        if self.__com_manager.operate_com(self.__com_manager.remove_com, com_id):
+        if self.__com_manager.remove_com(com_id):
             print("移除成功！")
         else:
             print("移除失败！")
@@ -540,7 +537,7 @@ class CommodityManagerView:
         """
         while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if self.__com_manager.operate_com(self.__com_manager.search_com, com_id):
+            if self.__com_manager.search_com(com_id):
                 return com_id
             print("提示:商品编号不存在!")
     
@@ -628,7 +625,7 @@ class ShoppingCarView:
         """
                 while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if self.__com_manager.operate_com(self.__com_manager.search_com, com_id):
+            if self.__commodity_manager.search_com(com_id):
                 return com_id
             print("提示:商品编号不存在!")
     
