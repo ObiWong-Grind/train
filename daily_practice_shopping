@@ -420,7 +420,8 @@ class ValueMinusError(Error):
         验证数值大小错误
     """
     def __init__(self, message01, message02):
-        super().__init__(message01, message02)
+        super().__init__(message01, message02, target_type)
+        self.target_type = target_type
 
     def report_an_error(self):
         """
@@ -429,6 +430,7 @@ class ValueMinusError(Error):
         while True:
             value = input(self.message01)
             try:
+                value = eval(self.target_type)(value)
                 value = int(value)
                 if value < 0:
                     raise ValueError()
@@ -491,8 +493,8 @@ class CommodityManagerView:
             输入商品
         """
         name = input("请输入商品名称:")
-        price = MessageError("输入商品价格:", "提示:商品价格输入有误!", "float").report_an_error()
-        inventory = ValueMinusError("输入商品库存:", "提示:商品库存输入有误!").report_an_error()
+        price = ValueMinusError("输入商品价格:", "提示:商品价格输入有误!", "float").report_an_error()
+        inventory = ValueMinusError("输入商品库存:", "提示:商品库存输入有误!", "int").report_an_error()
         commodity = CommodityModel(name, price, inventory)
         self.__commodity_manager.add_commodity(commodity)
 
@@ -507,7 +509,7 @@ class CommodityManagerView:
         """
             盘点小于要求的库存商品
         """
-        inventory = ValueMinusError("输入库存小于多少的商品:", "提示:数值输入有误!").report_an_error()
+        inventory = ValueMinusError("输入库存小于多少的商品:", "提示:数值输入有误!", "int").report_an_error()
         for commodity in self.__com_manager.get_inventory(self.__com_manager.get_under, inventory):
             self.__print_commodity(commodity)
     
@@ -662,7 +664,7 @@ class ShoppingCarView:
             输入支付金额查看支付结果
         """
         if self.__car_manager.close_an_account():
-            pay_money = MessageError("输入支付金额:", "提示:支付金额输入有误!", "float").report_an_error()
+            pay_money = ValueMinusError("输入支付金额:", "提示:支付金额输入有误!", "float").report_an_error()
             if self.__car_manager.pay_money(pay_money) == 0:
                 print("支付成功！")
             elif self.__car_manager.pay_money(pay_money) == -1:
