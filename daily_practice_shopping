@@ -54,21 +54,11 @@ class CommodityModel:
         self.__inventory = value
     
 
+
 commodity_database = []
 
 
-class CommodityFatherController:
-    """
-        迪米特法则是这么要求的，其实个人觉得过了
-    """
-    def search_commodity(self, com_id):
-        raise NotImplementedError()
-
-    def update_inventory(self, com_id, count):
-        raise NotImplementedError()
-
-
-class CommodityManagerController(CommodityFatherController):
+class CommodityManagerController:
     """
         商品管理控制器，负责业务逻辑处理
     """
@@ -96,47 +86,6 @@ class CommodityManagerController(CommodityFatherController):
         """
         CommodityManagerController.__init_id += 1
         return CommodityManagerController.__init_id
-
-    def search_commodity(self, com_id):
-        """
-            根据商品id查找商品
-        :param com_id: 商品id int
-        :return: 返回商品对象, False 没有该商品
-        """
-        for commodity in self.__com_list:
-            if commodity.id == com_id:
-                return commodity
-        return False
-
-    def remove_commodity(self, com_id):
-        """
-            根据商品id删除列表中的商品
-        :param com_id: 商品id int
-        :return: True 删除成功, False 删除失败
-        """
-        for commodity in self.__com_list:
-            if commodity.id == com_id:
-                self.__com_list.remove(commodity)
-                return True
-        return False
-    
-    def get_inventory_less(self, value):
-        """
-            将库存小于要求的商品返回
-        :param value: 数值 int
-        """
-        for item in self.com_list:
-            if item.inventory < value:
-                yield item
-
-    def get_inventory_greater(self, value):
-        """
-            将库存大于要求的商品返回
-        :param value: 数值 int
-        """
-        for item in self.com_list:
-            if item.inventory > value:
-                yield item
     
     def update_inventory(self, com_id, count):
         """
@@ -150,7 +99,53 @@ class CommodityManagerController(CommodityFatherController):
                 commodity.inventory += count
                 return True
         return False
+
+    def get_under(self, commodity, value):
+        """
+            将库存小于要求的商品返回, 函数式编程
+        """
+        return commodity.inventory < value
+
+    def get_overtop(self, commodity, value):
+        """
+            将库存大于要求的商品返回, 函数式编程
+        """
+        return commodity.inventory > value
+
+    def get_inventory(self, func_inventory, value):
+        """
+            盘点库存
+        :param func_inventory: 方法
+        :param value: 库存值 int
+        """
+        for commodity in self.__com_list:
+            if func_inventory(commodity, value):
+                yield commodity
     
+    def search_com(self, commodity):
+        """
+            查找库中商品
+        """
+        return commodity
+
+    def remove_com(self, commodity):
+        """
+            移除库中商品
+        """
+        self.__com_list.remove(commodity)
+        return True
+
+    def operate_com(self, func_operate, com_id):
+        """
+            根据商品id查找商品进行后续操作
+        :param func_operate: 方法
+        :param com_id: 商品id
+        """
+        for commodity in self.__com_list:
+            if commodity.id == com_id:
+                return func_operate(commodity)
+        return False
+
 
 class ShoppingCarModel:
     """
@@ -194,6 +189,7 @@ class ShoppingCarModel:
         self.__count = value
 
 
+
 car_database = []
 
 
@@ -203,6 +199,7 @@ class ShoppingCarManagerController:
     """
     def __init__(self):
         self.__car_list = car_database
+        self.__com_manager = CommodityManagerController()
 
     @property
     def car_list(self):
@@ -214,7 +211,7 @@ class ShoppingCarManagerController:
         :param com_id: 商品id int
         :param count: 购买的数量
         """
-        commodity = CommodityManagerController().search_commodity(com_id)
+        commodity = self.__com_manager.operate_com(self.__com_manager.search_com, com_id)
         car_commodity = self.search_car_commodity(com_id)
         if commodity and car_commodity is False:
             return self.__add_new_car(commodity, com_id, count)
@@ -229,7 +226,7 @@ class ShoppingCarManagerController:
         shopping = ShoppingCarModel()
         shopping.name, shopping.price, shopping.count, shopping.id = commodity.name, commodity.price, count, commodity.id
         self.__car_list.append(shopping)
-        CommodityManagerController().update_inventory(com_id, -count)
+        self.__com_manager.update_inventory(com_id, -count)
         return True
     
     def __accumulation_old_car(self, car_commodity, com_id, count):
@@ -237,7 +234,7 @@ class ShoppingCarManagerController:
             当购物车内有相同id的商品时, 往累加数量, 同时想数据库请求减去相同id商品的库存
         """
         car_commodity.count += count
-        CommodityManagerController().update_inventory(com_id, -count)
+        self.__com_manager.update_inventory(com_id, -count)
         return True
 
     def remove_car(self, com_id, count=1):
@@ -251,7 +248,8 @@ class ShoppingCarManagerController:
             if commodity.id == com_id:
                 commodity.count -= count
                 if commodity.count == 0:
-                    CommodityManagerController().update_inventory(com_id, count)
+                    self.__del_car(com_id)
+                self.__com_manager.update_inventory(com_id, count)
                 return True
         return False
     
@@ -445,7 +443,7 @@ class CommodityManagerView:
         商品管理视图
     """
     def __init__(self):
-        self.__commodity_manager = CommodityManagerController()
+        self.__com_manager = CommodityManagerController()
 
     def __display_menu(self):
         """
@@ -507,10 +505,10 @@ class CommodityManagerView:
     
     def __check_inventory(self):
         """
-            盘点库存
+            盘点小于要求的库存商品
         """
         inventory = ValueMinusError("输入库存小于多少的商品:", "提示:数值输入有误!").report_an_error()
-        for commodity in self.__commodity_manager.get_inventory_less(inventory):
+        for commodity in self.__com_manager.get_inventory(self.__com_manager.get_under, inventory):
             self.__print_commodity(commodity)
     
     def __update_inventory(self):
@@ -529,7 +527,7 @@ class CommodityManagerView:
             根据商品编号在数据库中移除商品
         """
         com_id = self.__check_id()
-        if self.__commodity_manager.remove_commodity(com_id):
+        if self.__com_manager.operate_com(self.__com_manager.remove_com, com_id):
             print("移除成功！")
         else:
             print("移除失败！")
@@ -540,7 +538,7 @@ class CommodityManagerView:
         """
         while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if self.__commodity_manager.search_commodity(com_id):
+            if self.__com_manager.operate_com(self.__com_manager.search_com, com_id):
                 return com_id
             print("提示:商品编号不存在!")
     
@@ -557,6 +555,7 @@ class ShoppingCarView:
     """
     def __init__(self):
         self.__car_manager = ShoppingCarManagerController()
+        self.__com_manager = CommodityManagerController()
 
     def __display_menu(self):
         """
@@ -625,9 +624,9 @@ class ShoppingCarView:
         """
             核对输入的商品id是否在商品列表中
         """
-        while True:
+                while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if CommodityManagerController().search_commodity(com_id):
+            if self.__com_manager.operate_com(self.__com_manager.search_com, com_id):
                 return com_id
             print("提示:商品编号不存在!")
     
@@ -654,7 +653,7 @@ class ShoppingCarView:
         """
         money = self.__car_manager.close_an_account()
         if money > 0:
-            print("合计:%d" % money)
+            print("合计:%.2f" % money)
         else:
             print("购物车为空！")
 
@@ -669,7 +668,7 @@ class ShoppingCarView:
             elif self.__car_manager.pay_money(pay_money) == -1:
                 print("支付失败，金额不足！")
             else:
-                print("支付成功，找零%d" % self.__car_manager.pay_money(pay_money))
+                print("支付成功，找零%.2f" % self.__car_manager.pay_money(pay_money))
         else:
             print("未购买任何商品！")
 
@@ -715,8 +714,9 @@ class NavigationView:
                 break
 
 
-view = NavigationView()
-view.main()
+if __name__ == "__main__":
+    view = NavigationView()
+    view.main()
 
 
 
