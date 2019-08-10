@@ -58,12 +58,10 @@ class CommodityModel:
 commodity_database = []
 
 
-class CommodityManagerController:
+class CommodityController:
     """
-        商品管理控制器，负责业务逻辑处理
+        迪米特法则
     """
-    __init_id = 100
-
     def __init__(self):
         self.__com_list = commodity_database
 
@@ -72,12 +70,55 @@ class CommodityManagerController:
         return self.__com_list
 
     def add_commodity(self, commodity_info):
+        raise NotImplementedError()
+
+    def update_inventory(self, value, count):
+        raise NotImplementedError()
+
+    def match_inventory_under(self, value):
+        raise NotImplementedError()
+
+    def match_inventory_greater(self, value):
+        raise NotImplementedError()
+
+    def match_inventory_equality(self, value):
+        raise NotImplementedError()
+
+    def match_price_under(self, value):
+        raise NotImplementedError()
+
+    def match_price_greater(self, value):
+        raise NotImplementedError()
+
+    def match_price_equality(self, value):
+        raise NotImplementedError()
+
+    def search_id(self, value):
+        raise NotImplementedError()
+
+    def search_name(self, value):
+        raise NotImplementedError()
+
+    def remove_com(self, value):
+        raise NotImplementedError()
+
+
+class CommodityManagerController(CommodityController):
+    """
+        商品管理控制器，负责业务逻辑处理
+    """
+    __init_id = 100
+
+    def __init__(self):
+        super().__init__()
+
+    def add_commodity(self, commodity_info):
         """
             将商品数据加入数据库中
-        :param commodity_info: 带有默认学生id(0)的商品信息
+        :param commodity_info: 带有默认商品id(0)的商品对象
         """
         commodity_info.id = self.__generate_id()
-        self.__com_list.append(commodity_info)
+        self.com_list.append(commodity_info)
 
     def __generate_id(self):
         """
@@ -86,61 +127,96 @@ class CommodityManagerController:
         """
         CommodityManagerController.__init_id += 1
         return CommodityManagerController.__init_id
-    
-    def update_inventory(self, com_id, count):
+
+    def update_inventory(self, value, count):
         """
             修改库存
-        :param com_id: 商品id
+        :param value: id
         :param count: 修改数量
         :return: True 修改成功, False 修改失败
         """
-        for commodity in self.__com_list:
-            if commodity.id == com_id and commodity.inventory + count > 0:
-                commodity.inventory += count
-                return True
+        commodity = self.search_id(value)
+        if commodity and commodity.inventory + count > 0:
+            commodity.inventory += count
+            return True
         return False
 
-    def get_under(self, commodity, value):
+    def match_inventory_under(self, value):
         """
-            将库存小于要求的商品返回, 函数式编程
-        """
-        return commodity.inventory < value
-
-    def get_overtop(self, commodity, value):
-        """
-            将库存大于要求的商品返回, 函数式编程
-        """
-        return commodity.inventory > value
-
-    def get_inventory(self, func_inventory, value):
-        """
-            盘点库存
-        :param func_inventory: 方法
+            盘点库存小于要求
         :param value: 库存值 int
         """
-        for commodity in self.__com_list:
-            if func_inventory(commodity, value):
-                yield commodity
-    
-    def search_com(self, com_id):
+        for commodity in ListHelper.search_all(self.com_list, lambda item: item.inventory < value):
+            yield commodity
+
+    def match_inventory_greater(self, value):
         """
-            根据商品id查找商品
-        :param com_id: 商品id
+            盘点库存大于要求
+        :param value: 库存值 int
         """
-        for commodity in self.__com_list:
-            if commodity.id == com_id:
-                return commodity
+        for commodity in ListHelper.search_all(self.com_list, lambda item: item.inventory > value):
+            yield commodity
+
+    def match_inventory_equality(self, value):
+        """
+            盘点库存等于要求
+        :param value: 库存值 int
+        """
+        for commodity in ListHelper.search_all(self.com_list, lambda item: item.inventory == value):
+            yield commodity
+
+    def match_price_under(self, value):
+        """
+            匹配价格小于要求
+        :param value: 值 int
+        """
+        for commodity in ListHelper.search_all(self.com_list, lambda item: item.price < value):
+            yield commodity
+
+    def match_price_greater(self, value):
+        """
+            匹配价格大于要求
+        :param value: 值 int
+        """
+        for commodity in ListHelper.search_all(self.com_list, lambda item: item.price > value):
+            yield commodity
+
+    def match_price_equality(self, value):
+        """
+            匹配价格等于要求
+        :param value: 值 int
+        """
+        for commodity in ListHelper.search_all(self.com_list, lambda item: item.price == value):
+            yield commodity
+
+    def search_id(self, value):
+        """
+            根据id在数据库中查找是否有商品
+        :param value: id
+        :return: 返回相关id结果
+        """
+        return ListHelper.search_single(self.com_list, lambda item: item.id == value)
+
+    def search_name(self, value):
+        """
+            根据条件搜索相关, 目前view中没有相关搜索需求, 先放着
+        :param value: 条件
+        :return: 成功就返回相关结果, False 没有相关结果
+        """
+        for commodity in ListHelper.search_all(self.com_list, lambda item: item.name == value):
+            yield commodity
         return False
 
-    def remove_com(self, com_id):
+    def remove_com(self, value):
         """
-            根据商品id移除商品
-        :param com_id: 商品id
+            根据id删除相关商品
+        :param value: id
+        :return: True 删除成功, False 删除失败
         """
-        for commodity in self.__com_list:
-            if commodity.id == com_id:
-                self.__com_list.remove(commodity)
-                return True
+        commodity = self.search_id(value)
+        if commodity:
+            self.com_list.remove(commodity)
+            return True
         return False
 
 
@@ -190,9 +266,9 @@ class ShoppingCarModel:
 car_database = []
 
 
-class ShoppingCarManagerController:
+class ShoppingCarController:
     """
-        购物车管理控制器，负责业务逻辑处理
+        卧槽！这是迪米特法则的具体体现吗？
     """
     def __init__(self):
         self.__car_list = car_database
@@ -202,84 +278,106 @@ class ShoppingCarManagerController:
     def car_list(self):
         return self.__car_list
 
-    def add_car(self, com_id, count=1):
+    @property
+    def com_manager(self):
+        return self.__com_manager
+
+    def add_in_car(self, com_id, count=1):
+        raise NotImplementedError()
+
+    def update_in_car(self, com_id, count=1):
+        raise NotImplementedError()
+
+    def search_id_in_car(self, value):
+        raise NotImplementedError()
+
+    def close_an_account(self):
+        raise NotImplementedError()
+
+    def pay_money(self, money=0):
+        raise NotImplementedError()
+
+
+class ShoppingCarManagerController(ShoppingCarController):
+    """
+        购物车管理控制器，负责业务逻辑处理
+    """
+    def __init__(self):
+        super().__init__()
+
+    def add_in_car(self, com_id, count=1):
         """
-            按照商品id将商品添加进购物车列表
-        :param com_id: 商品id int
+            按照id 添加进购物车列表
+        :param com_id: id int
         :param count: 购买的数量
         """
-        commodity = self.__com_manager.search_com(com_id)
-        car_commodity = self.search_car_commodity(com_id)
-        if commodity and car_commodity is False:
-            return self.__add_new_car(commodity, com_id, count)
-        if car_commodity is not False:
-            return self.__accumulation_old_car(car_commodity, com_id, count)
+        car_commodity = self.search_id_in_car(com_id)
+        commodity = self.com_manager.search_id(com_id)
+        if car_commodity:
+            return self.__add_old_com(car_commodity, com_id, count)
+        if commodity:
+            return self.__add_new_com(commodity, com_id, count)
         return False
-    
-    def __add_new_car(self, commodity, com_id, count):
+
+    def __add_new_com(self, commodity, com_id, count):
         """
-            当购物车中没有相同id的商品时, 往购物车内新增该商品, 同时想数据库请求减去相同id商品的库存
+            当购物车中没有相同id的商品时, 往购物车内新增该商品, 同时向库中请求减去相同id商品的库存
         """
         shopping = ShoppingCarModel()
         shopping.name, shopping.price, shopping.count, shopping.id = commodity.name, commodity.price, count, commodity.id
-        self.__car_list.append(shopping)
-        self.__com_manager.update_inventory(com_id, -count)
-        return True
-    
-    def __accumulation_old_car(self, car_commodity, com_id, count):
-        """
-            当购物车内有相同id的商品时, 往累加数量, 同时想数据库请求减去相同id商品的库存
-        """
-        car_commodity.count += count
-        self.__com_manager.update_inventory(com_id, -count)
+        self.car_list.append(shopping)
+        self.com_manager.update_inventory(com_id, -count)
         return True
 
-    def remove_car(self, com_id, count=1):
+    def __add_old_com(self, car_commodity, com_id, count):
+        """
+            当购物车内有相同id的商品时, 往累加数量, 同时向库中请求减去相同id商品的库存
+        """
+        car_commodity.count += count
+        self.com_manager.update_inventory(com_id, -count)
+        return True
+
+    def update_in_car(self, com_id, count=1):
         """
             根据商品id在购物车中移除对应数量的商品
         :param com_id: 商品id int
-        :param count: 删除这个id的商品个数 int
-        :return: True 删除成功, False 删除失败
+        :param count: 移除这个id的商品个数 int
+        :return: True 操作成功, False 操作失败
         """
-        for commodity in self.__car_list:
+        for commodity in self.car_list:
             if commodity.id == com_id:
                 commodity.count -= count
                 if commodity.count == 0:
-                    self.__del_car(com_id)
-                self.__com_manager.update_inventory(com_id, count)
+                    self.__del_in_car(com_id)
+                self.com_manager.update_inventory(com_id, count)
                 return True
         return False
-    
-    def __del_car(self, com_id):
+
+    def __del_in_car(self, value):
         """
-            根据商品id删除购物车中的商品
-        :param com_id: 商品id int
-        :return: True 删除成功, False 删除失败
+            根据条件删除购物车中的商品
+        :param value:
+        :return: True 操作成功, False 操作失败
         """
-        for commodity in self.__car_list:
-            if commodity.id == com_id:
-                self.__car_list.remove(commodity)
-                return True
+        for commodity in ListHelper.search_all(self.car_list, lambda item: item.id == value):
+            self.car_list.remove(commodity)
+            return True
         return False
-    
-    def search_car_commodity(self, com_id):
+
+    def search_id_in_car(self, value):
         """
-            根据商品id查找购物车中商品
-        :param com_id: 商品id int
-        :return: 返回购物车商品对象，False 没有商品
+            根据id在购物车库中查找是否有商品
+        :param value: id
         """
-        for commodity in self.__car_list:
-            if commodity.id == com_id:
-                return commodity
-        return False
+        return ListHelper.search_single(self.car_list, lambda item: item.id == value)
 
     def close_an_account(self):
         """
             合计购物车的总金额
-        :return: aggregate 总金额, 返回None时 金额为0或更小
+        :return: aggregate 总金额
         """
         aggregate = 0
-        for commodity in self.__car_list:
+        for commodity in self.car_list:
             aggregate += commodity.price * commodity.count
         return aggregate
 
@@ -437,6 +535,67 @@ class ValueMinusError(Error):
             return value
 
 
+class ListHelper:
+    """
+        列表助手类
+    """
+    @staticmethod
+    def search_all(list_target, func_condition):
+        """
+            通用的查找某个条件的所有元素方法
+        :param list_target: 需要查找的列表
+        :param func_condition: 需要查找的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 需要查找的元素
+        """
+        for item in list_target:
+            if func_condition(item):
+                yield item
+
+    @staticmethod
+    def search_single(list_target, func_condition):
+        """
+            通用的查找某个条件的唯一或第一个元素方法
+        :param list_target: 需要查找的列表
+        :param func_condition: 需要查找的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 需要查找的一个元素
+        """
+        for item in list_target:
+            if func_condition(item):
+                return item
+
+    @staticmethod
+    def match_price_equality(item, value):
+        """
+            匹配价格相等要求
+        :param item: 对象
+        :param value: 匹配相关值
+        :return: bool值
+        """
+        return item.price == value
+
+    @staticmethod
+    def match_price_under(item, value):
+        """
+            匹配价格小于要求
+        :param item: 对象
+        :param value: 匹配相关值
+        :return: bool值
+        """
+        return item.price < value
+
+    @staticmethod
+    def match_price_greater(item, value):
+        """
+            匹配价格大于要求
+        :param item: 对象
+        :param value: 匹配相关值
+        :return: bool值
+        """
+        return item.price > value
+
+
 class CommodityManagerView:
     """
         商品管理视图
@@ -465,7 +624,7 @@ class CommodityManagerView:
         if item == "1":
             self.__input_commodity()
         elif item == "2":
-            self.__output_commodity(self.__commodity_manager.com_list)
+            self.__output_commodity(self.__com_manager.com_list)
         elif item == "3":
             self.__check_inventory()
         elif item == "4":
@@ -487,13 +646,13 @@ class CommodityManagerView:
 
     def __input_commodity(self):
         """
-            输入商品
+            添加商品
         """
-        name = input("请输入商品名称:")
+        name = input("输入商品名称:")
         price = ValueMinusError("输入商品价格:", "提示:商品价格输入有误!", "float").report_an_error()
         inventory = ValueMinusError("输入商品库存:", "提示:商品库存输入有误!", "int").report_an_error()
         commodity = CommodityModel(name, price, inventory)
-        self.__commodity_manager.add_commodity(commodity)
+        self.__com_manager.add_commodity(commodity)
 
     def __output_commodity(self, target_list):
         """
@@ -501,26 +660,27 @@ class CommodityManagerView:
         """
         for commodity in target_list:
             self.__print_commodity(commodity)
-    
+
     def __check_inventory(self):
         """
             盘点小于要求的库存商品
         """
         inventory = ValueMinusError("输入库存小于多少的商品:", "提示:数值输入有误!", "int").report_an_error()
-        for commodity in self.__com_manager.get_inventory(self.__com_manager.get_under, inventory):
+        iterator = self.__com_manager.match_inventory_under(inventory)
+        for commodity in iterator:
             self.__print_commodity(commodity)
-    
+
     def __update_inventory(self):
         """
             根据商品编号在数据库中修改库存
         """
         com_id = self.__check_id()
         count = MessageError("输入修改数量:", "提示:修改数量输入有误!", "int").report_an_error()
-        if self.__commodity_manager.update_inventory(com_id, count):
+        if self.__com_manager.update_inventory(com_id, count):
             print("修改成功！")
         else:
             print("修改失败！")
-    
+
     def __delete_commodity(self):
         """
             根据商品编号在数据库中移除商品
@@ -530,17 +690,17 @@ class CommodityManagerView:
             print("移除成功！")
         else:
             print("移除失败！")
-    
+
     def __check_id(self):
         """
             核对输入的商品id是否存在于数据库中
         """
         while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if self.__com_manager.search_com(com_id):
+            if self.__com_manager.search_id(com_id):
                 return com_id
             print("提示:商品编号不存在!")
-    
+
     def __print_commodity(self, commodity):
         """
             打印商品
@@ -554,7 +714,6 @@ class ShoppingCarView:
     """
     def __init__(self):
         self.__car_manager = ShoppingCarManagerController()
-        self.__com_manager = CommodityManagerController()
 
     def __display_menu(self):
         """
@@ -577,7 +736,7 @@ class ShoppingCarView:
         if item == "1":
             self.__add_shopping_car()
         elif item == "2":
-            self.__delete_shopping_car()
+            self.__update_shopping_car()
         elif item == "3":
             self.__output_shopping_car(self.__car_manager.car_list)
         elif item == "4":
@@ -601,41 +760,41 @@ class ShoppingCarView:
         """
             添加购物车
         """
-        com_id = self.__check_from_commodity()
-        count = ValueMinusError("输入购买数量:", "提示:购买数量输入有误!").report_an_error()
-        if self.__car_manager.add_car(com_id, count):
+        com_id = self.__check_id_in_commodity()
+        count = ValueMinusError("输入购买数量:", "提示:购买数量输入有误!", "int").report_an_error()
+        if self.__car_manager.add_in_car(com_id, count):
             print("添加成功！")
         else:
             print("添加失败！")
 
-    def __delete_shopping_car(self):
+    def __update_shopping_car(self):
         """
-            根据商品编号从购物车中移除商品
+            根据商品编号从购物车中移除商品相应数量的商品
         """
-        com_id = self.__check_from_car()
-        count = ValueMinusError("输入移除数量:", "提示:移除数量输入有误!").report_an_error()
-        if self.__car_manager.remove_car(com_id, count):
+        com_id = self.__check_id_in_car()
+        count = ValueMinusError("输入移除数量:", "提示:移除数量输入有误!", "int").report_an_error()
+        if self.__car_manager.update_in_car(com_id, count):
             print("移除成功！")
         else:
             print("移除失败！")
 
-    def __check_from_commodity(self):
+    def __check_id_in_commodity(self):
         """
             核对输入的商品id是否在商品列表中
         """
-                while True:
+        while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if self.__commodity_manager.search_com(com_id):
+            if CommodityManagerController().search_id(com_id):
                 return com_id
             print("提示:商品编号不存在!")
-    
-    def __check_from_car(self):
+
+    def __check_id_in_car(self):
         """
             核对输入的商品id是否存在于购物车中
         """
         while True:
             com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if self.__car_manager.search_car_commodity(com_id):
+            if self.__car_manager.search_id_in_car(com_id):
                 return com_id
             print("提示:商品编号不在购物车内!")
 
