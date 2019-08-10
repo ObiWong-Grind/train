@@ -10,6 +10,120 @@
 """
 
 
+
+class ListHelper:
+    """
+        列表助手类
+    """
+    @staticmethod
+    def search_all(list_target, func_condition):
+        """
+            通用的查找某个条件的所有元素方法
+        :param list_target: 需要查找的列表
+        :param func_condition: 需要查找的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 需要查找的元素
+        """
+        for item in list_target:
+            if func_condition(item):
+                yield item
+
+    @staticmethod
+    def search_single(list_target, func_condition):
+        """
+            通用的查找某个条件的唯一或第一个元素方法
+        :param list_target: 需要查找的列表
+        :param func_condition: 需要查找的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 需要查找的一个元素
+        """
+        for item in list_target:
+            if func_condition(item):
+                return item
+
+
+
+class ErrorHelper:
+    """
+        错误父类
+        抽象出一个错误类，判断输入的条件是否符合规则
+    """
+    @staticmethod
+    def value_error(message01, message02, target_type, func_condition):
+        """
+            通用判断输入内容是否符合规则的方法
+        :param message01: 输入内容提示语 str
+        :param message02: 错误提示语 str
+        :param target_type: "int" or "float" str型
+        :param func_condition: 需要匹配的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 输入的内容经过 int or float 转换后的数值
+                    根据 target_type 决定 返回值类型
+        """
+        while True:
+            value = input(message01)
+            try:
+                value = eval(target_type)(value)
+                if func_condition(value):
+                    return value
+                raise ValueError()
+            except Exception:
+                print(message02)
+
+    @staticmethod
+    def key_error(message01, message02, message03):
+        """
+            通用判断输入内容是在范围内的方法
+        :param message01: 输入内容提示语 str
+        :param message02: 错误提示语 str
+        :param message03: 可以 message02 in 容器 的容器
+        :return: 输入的内容
+        """
+        while True:
+            message = input(message01)
+            try:
+                if message in message03:
+                    return message
+                raise ValueError
+            except Exception:
+                print(message02)
+
+
+
+class CommonWord:
+    """
+        常用话术
+    """
+    def __init__(self):
+        self.__word = {
+            1: "输入菜单快捷键:",
+            2: "\033[31m提示:输入的键值不符合要求!\033[0m",
+            3: "输入购买数量:",
+            4: "\033[31m提示:购买数量输入有误!\033[0m",
+            5: "输入移除数量:",
+            6: "\033[31m提示:移除数量输入有误!\033[0m",
+            7: "输入商品编号:",
+            8: "\033[31m提示:商品编号输入有误!\033[0m",
+            9: "输入支付金额:",
+            10: "\033[31m提示:支付金额输入有误!\033[0m",
+            11: "输入商品价格:",
+            12: "\033[31m提示:商品价格输入有误!\033[0m",
+            13: "输入商品库存:",
+            14: "\033[31m提示:商品库存输入有误!\033[0m",
+            15: "输入库存小于多少的商品:",
+            16: "\033[31m提示:数值输入有误!\033[0m",
+            17: "输入修改数量:",
+            18: "\033[31m提示:数量输入有误!\033[0m",
+            19: "\033[31m提示:商品编号不存在!\033[0m",
+            20: "\033[31m提示:商品编号不在购物车内!\033[0m",
+        }
+
+    @property
+    def word(self):
+        return self.__word
+
+
+
 class CommodityModel:
     """
         商品数据模型，包含id, name, price
@@ -60,7 +174,7 @@ commodity_database = []
 
 class CommodityController:
     """
-        迪米特法则
+        迪米特法则？
     """
     def __init__(self):
         self.__com_list = commodity_database
@@ -70,6 +184,9 @@ class CommodityController:
         return self.__com_list
 
     def add_commodity(self, commodity_info):
+        raise NotImplementedError()
+
+    def search_id(self, value):
         raise NotImplementedError()
 
     def update_inventory(self, value, count):
@@ -91,9 +208,6 @@ class CommodityController:
         raise NotImplementedError()
 
     def match_price_equality(self, value):
-        raise NotImplementedError()
-
-    def search_id(self, value):
         raise NotImplementedError()
 
     def search_name(self, value):
@@ -127,6 +241,14 @@ class CommodityManagerController(CommodityController):
         """
         CommodityManagerController.__init_id += 1
         return CommodityManagerController.__init_id
+
+    def search_id(self, value):
+        """
+            根据id在数据库中查找是否有商品
+        :param value: id
+        :return: 返回相关id结果
+        """
+        return ListHelper.search_single(self.com_list, lambda item: item.id == value)
 
     def update_inventory(self, value, count):
         """
@@ -189,23 +311,13 @@ class CommodityManagerController(CommodityController):
         for commodity in ListHelper.search_all(self.com_list, lambda item: item.price == value):
             yield commodity
 
-    def search_id(self, value):
-        """
-            根据id在数据库中查找是否有商品
-        :param value: id
-        :return: 返回相关id结果
-        """
-        return ListHelper.search_single(self.com_list, lambda item: item.id == value)
-
     def search_name(self, value):
         """
             根据条件搜索相关, 目前view中没有相关搜索需求, 先放着
         :param value: 条件
-        :return: 成功就返回相关结果, False 没有相关结果
         """
         for commodity in ListHelper.search_all(self.com_list, lambda item: item.name == value):
             yield commodity
-        return False
 
     def remove_com(self, value):
         """
@@ -218,6 +330,120 @@ class CommodityManagerController(CommodityController):
             self.com_list.remove(commodity)
             return True
         return False
+
+
+
+class CommodityManagerView:
+    """
+        商品管理视图
+    """
+    def __init__(self):
+        self.__com_manager = CommodityManagerController()
+        self.__word = CommonWord()
+
+    def __display_menu(self):
+        """
+            菜单
+        """
+        print()
+        print("1、添加商品")
+        print("2、查看商品")
+        print("3、盘点库存")
+        print("4、修改库存")
+        print("5、删除商品")
+        print("q、退出")
+        print()
+
+    def __select_menu(self):
+        """
+            输入快捷键
+        """
+        item = ErrorHelper.key_error(self.__word.word[1], self.__word.word[2], ("1", "2", "3", "4", "5", "q", "Q"))
+        if item == "1":
+            self.__input_commodity()
+        elif item == "2":
+            self.__output_commodity(self.__com_manager.com_list)
+        elif item == "3":
+            self.__check_inventory()
+        elif item == "4":
+            self.__update_inventory()
+        elif item == "5":
+            self.__delete_commodity()
+        elif item == "q" or item == "Q":
+            return -1
+
+    def main(self):
+        """
+            商品录入后台入口
+        """
+        while True:
+            self.__display_menu()
+            if self.__select_menu() == -1:
+                print("退出商品录入后台")
+                break
+
+    def __input_commodity(self):
+        """
+            添加商品
+        """
+        name = input("输入商品名称:")
+        price = ErrorHelper.value_error(self.__word.word[11], self.__word.word[12], "float", lambda value: value >= 0)
+        inventory = ErrorHelper.value_error(self.__word.word[13], self.__word.word[14], "int", lambda value: value > 0)
+        commodity = CommodityModel(name, price, inventory)
+        self.__com_manager.add_commodity(commodity)
+
+    def __output_commodity(self, target_list):
+        """
+            输出商品列表
+        """
+        for commodity in target_list:
+            self.__print_commodity(commodity)
+
+    def __check_inventory(self):
+        """
+            盘点小于要求的库存商品
+        """
+        inventory = ErrorHelper.value_error(self.__word.word[15], self.__word.word[16], "int", lambda value: value > 0)
+        iterator = self.__com_manager.match_inventory_under(inventory)
+        for commodity in iterator:
+            self.__print_commodity(commodity)
+
+    def __update_inventory(self):
+        """
+            根据商品编号在数据库中修改库存
+        """
+        com_id = self.__check_id()
+        count = ErrorHelper.value_error(self.__word.word[17], self.__word.word[18], "int", lambda value: type(value) == int)
+        if self.__com_manager.update_inventory(com_id, count):
+            print("修改成功！")
+        else:
+            print("修改失败！")
+
+    def __delete_commodity(self):
+        """
+            根据商品编号在数据库中移除商品
+        """
+        com_id = self.__check_id()
+        if self.__com_manager.remove_com(com_id):
+            print("移除成功！")
+        else:
+            print("移除失败！")
+
+    def __check_id(self):
+        """
+            核对输入的商品id是否存在于数据库中
+        """
+        while True:
+            com_id = ErrorHelper.value_error(self.__word.word[7], self.__word.word[8], "int", lambda value: value > 0)
+            if self.__com_manager.search_id(com_id):
+                return com_id
+            print(self.__word.word[19])
+
+    def __print_commodity(self, commodity):
+        """
+            打印商品
+        """
+        print(commodity.id, commodity.name, commodity.price, commodity.inventory)
 
 
 
@@ -398,296 +624,13 @@ class ShoppingCarManagerController(ShoppingCarController):
 
 
 
-class Error:
-    """
-        错误父类
-    """
-    def __init__(self, message01, message02):
-        """
-            相关内容
-        :param message01: 输入的内容
-        :param message02: 提示的内容
-        """
-        self.message01 = message01
-        self.message02 = message02
-
-    @property
-    def message01(self):
-        return self.__message01
-
-    @message01.setter
-    def message01(self, value):
-        self.__message01 = value
-
-    @property
-    def message02(self):
-        return self.__message02
-
-    @message02.setter
-    def message02(self, value):
-        self.__message02 = value
-
-    def report_an_error(self):
-        raise NotImplementedError()
-
-
-class MessageError(Error):
-    """
-        信息输入验证
-    """
-    def __init__(self, message01, message02, target_type):
-        """
-            相关内容
-        :param message01: 输入的内容
-        :param message02: 提示的内容
-        :param target_type: 需要转换的类型, str型 输入的为"int" or "float"
-        """
-        super().__init__(message01, message02)
-        self.target_type = target_type
-
-    @property
-    def target_type(self):
-        return self.__target_type
-
-    @target_type.setter
-    def target_type(self, value):
-        if value not in ("int", "float"):
-            raise ValueError("让传 'int' or 'float' 就要听话")
-        self.__target_type = value
-
-    def report_an_error(self):
-        """
-            验证相关信息
-        """
-        while True:
-            message = input(self.message01)
-            try:
-                message = eval(self.target_type)(message)
-            except Exception:
-                print(self.message02)
-                continue
-            return message
-
-
-class KeyError(Error):
-    """
-        按键信息验证
-    """
-    def __init__(self, message01, message02, message03):
-        """
-            相关内容
-        :param message01: 输入的内容
-        :param message02: 提示的内容
-        :param message03: 传入一个键值元组 or 列表，元素为str型
-        """
-        super().__init__(message01, message02)
-        self.message03 = message03
-        
-    @property
-    def message03(self):
-        return self.__message03
-
-    @message03.setter
-    def message03(self, value):
-        self.__message03 = value
-
-    def report_an_error(self):
-        """
-            验证相关信息
-        """
-        while True:
-            key = input(self.message01)
-            try:
-                self.__find_content(key)
-            except Exception:
-                print(self.message02)
-                continue
-            return key
-    
-    def __find_content(self, key):
-    """
-        查找输入的值是否在相关范围内
-    """
-    if key not in self.message03:
-        raise ValueError
-
-
-class ValueMinusError(Error):
-    """
-        验证数值大小错误
-    """
-    def __init__(self, message01, message02):
-        super().__init__(message01, message02, target_type)
-        self.target_type = target_type
-
-    def report_an_error(self):
-        """
-            验证相关信息
-        """
-        while True:
-            value = input(self.message01)
-            try:
-                value = eval(self.target_type)(value)
-                value = int(value)
-                if value < 0:
-                    raise ValueError()
-            except Exception:
-                print(self.message02)
-                continue
-            return value
-
-
-class ListHelper:
-    """
-        列表助手类
-    """
-    @staticmethod
-    def search_all(list_target, func_condition):
-        """
-            通用的查找某个条件的所有元素方法
-        :param list_target: 需要查找的列表
-        :param func_condition: 需要查找的条件, 函数类型
-                    函数名(参数) --> bool
-        :return: 需要查找的元素
-        """
-        for item in list_target:
-            if func_condition(item):
-                yield item
-
-    @staticmethod
-    def search_single(list_target, func_condition):
-        """
-            通用的查找某个条件的唯一或第一个元素方法
-        :param list_target: 需要查找的列表
-        :param func_condition: 需要查找的条件, 函数类型
-                    函数名(参数) --> bool
-        :return: 需要查找的一个元素
-        """
-        for item in list_target:
-            if func_condition(item):
-                return item
-
-
-
-class CommodityManagerView:
-    """
-        商品管理视图
-    """
-    def __init__(self):
-        self.__com_manager = CommodityManagerController()
-
-    def __display_menu(self):
-        """
-            菜单
-        """
-        print()
-        print("1、添加商品")
-        print("2、查看商品")
-        print("3、盘点库存")
-        print("4、修改库存")
-        print("5、删除商品")
-        print("q、退出")
-        print()
-
-    def __select_menu(self):
-        """
-            输入快捷键
-        """
-        item = KeyError("输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "3", "4", "5", "q", "Q")).report_an_error()
-        if item == "1":
-            self.__input_commodity()
-        elif item == "2":
-            self.__output_commodity(self.__com_manager.com_list)
-        elif item == "3":
-            self.__check_inventory()
-        elif item == "4":
-            self.__update_inventory()
-        elif item == "5":
-            self.__delete_commodity()
-        elif item == "q" or item == "Q":
-            return -1
-
-    def main(self):
-        """
-            商品录入后台入口
-        """
-        while True:
-            self.__display_menu()
-            if self.__select_menu() == -1:
-                print("退出商品录入后台")
-                break
-
-    def __input_commodity(self):
-        """
-            添加商品
-        """
-        name = input("输入商品名称:")
-        price = ValueMinusError("输入商品价格:", "提示:商品价格输入有误!", "float").report_an_error()
-        inventory = ValueMinusError("输入商品库存:", "提示:商品库存输入有误!", "int").report_an_error()
-        commodity = CommodityModel(name, price, inventory)
-        self.__com_manager.add_commodity(commodity)
-
-    def __output_commodity(self, target_list):
-        """
-            输出商品列表
-        """
-        for commodity in target_list:
-            self.__print_commodity(commodity)
-
-    def __check_inventory(self):
-        """
-            盘点小于要求的库存商品
-        """
-        inventory = ValueMinusError("输入库存小于多少的商品:", "提示:数值输入有误!", "int").report_an_error()
-        iterator = self.__com_manager.match_inventory_under(inventory)
-        for commodity in iterator:
-            self.__print_commodity(commodity)
-
-    def __update_inventory(self):
-        """
-            根据商品编号在数据库中修改库存
-        """
-        com_id = self.__check_id()
-        count = MessageError("输入修改数量:", "提示:修改数量输入有误!", "int").report_an_error()
-        if self.__com_manager.update_inventory(com_id, count):
-            print("修改成功！")
-        else:
-            print("修改失败！")
-
-    def __delete_commodity(self):
-        """
-            根据商品编号在数据库中移除商品
-        """
-        com_id = self.__check_id()
-        if self.__com_manager.remove_com(com_id):
-            print("移除成功！")
-        else:
-            print("移除失败！")
-
-    def __check_id(self):
-        """
-            核对输入的商品id是否存在于数据库中
-        """
-        while True:
-            com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
-            if self.__com_manager.search_id(com_id):
-                return com_id
-            print("提示:商品编号不存在!")
-
-    def __print_commodity(self, commodity):
-        """
-            打印商品
-        """
-        print(commodity.id, commodity.name, commodity.price, commodity.inventory)
-
-
-
 class ShoppingCarView:
     """
         购物车管理视图
     """
     def __init__(self):
         self.__car_manager = ShoppingCarManagerController()
+        self.__word = CommonWord()
 
     def __display_menu(self):
         """
@@ -706,7 +649,7 @@ class ShoppingCarView:
         """
             输入快捷键
         """
-        item = KeyError("输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "3", "4", "5", "q", "Q")).report_an_error()
+        item = ErrorHelper.key_error(self.__word.word[1], self.__word.word[2], ("1", "2", "3", "4", "5", "q", "Q"))
         if item == "1":
             self.__add_shopping_car()
         elif item == "2":
@@ -735,7 +678,7 @@ class ShoppingCarView:
             添加购物车
         """
         com_id = self.__check_id_in_commodity()
-        count = ValueMinusError("输入购买数量:", "提示:购买数量输入有误!", "int").report_an_error()
+        count = ErrorHelper.value_error(self.__word.word[3], self.__word.word[4], "int", lambda value: value > 0)
         if self.__car_manager.add_in_car(com_id, count):
             print("添加成功！")
         else:
@@ -746,31 +689,39 @@ class ShoppingCarView:
             根据商品编号从购物车中移除商品相应数量的商品
         """
         com_id = self.__check_id_in_car()
-        count = ValueMinusError("输入移除数量:", "提示:移除数量输入有误!", "int").report_an_error()
+        count = ErrorHelper.value_error(self.__word.word[5], self.__word.word[6], "int", lambda value: value > 0)
         if self.__car_manager.update_in_car(com_id, count):
             print("移除成功！")
         else:
             print("移除失败！")
+
+    def __input_id(self):
+        """
+            验证商品id是否符合规则
+        :return: id
+        """
+        com_id = ErrorHelper.value_error(self.__word.word[7], self.__word.word[8], "int", lambda value: value > 0)
+        return com_id
 
     def __check_id_in_commodity(self):
         """
             核对输入的商品id是否在商品列表中
         """
         while True:
-            com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
+            com_id = self.__input_id()
             if CommodityManagerController().search_id(com_id):
                 return com_id
-            print("提示:商品编号不存在!")
+            print(self.__word.word[19])
 
     def __check_id_in_car(self):
         """
             核对输入的商品id是否存在于购物车中
         """
         while True:
-            com_id = MessageError("输入商品编号:", "提示:商品编号输入有误!", "int").report_an_error()
+            com_id = self.__input_id()
             if self.__car_manager.search_id_in_car(com_id):
                 return com_id
-            print("提示:商品编号不在购物车内!")
+            print(self.__word.word[20])
 
     def __output_shopping_car(self, target_list):
         """
@@ -794,7 +745,7 @@ class ShoppingCarView:
             输入支付金额查看支付结果
         """
         if self.__car_manager.close_an_account():
-            pay_money = ValueMinusError("输入支付金额:", "提示:支付金额输入有误!", "float").report_an_error()
+            pay_money = ErrorHelper.value_error(self.__word.word[9], self.__word.word[10], "float", lambda value: value >= 0)
             if self.__car_manager.pay_money(pay_money) == 0:
                 print("支付成功！")
             elif self.__car_manager.pay_money(pay_money) == -1:
@@ -813,6 +764,7 @@ class NavigationView:
     def __init__(self):
         self.__commodity_main = CommodityManagerView()
         self.__shopping_car_main = ShoppingCarView()
+        self.__word = CommonWord()
 
     def __display_menu(self):
         """
@@ -828,7 +780,7 @@ class NavigationView:
         """
             输入快捷键
         """
-        item = KeyError("请输入菜单快捷键:", "提示:输入的键值不符合要求!", ("1", "2", "q", "Q")).report_an_error()
+        item = ErrorHelper.key_error(self.__word.word[1], self.__word.word[2], ("1", "2", "q", "Q"))
         if item == "1":
             self.__commodity_main.main()
         elif item == "2":
