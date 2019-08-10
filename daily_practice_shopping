@@ -220,6 +220,7 @@ class CommodityManagerController(CommodityController):
         return False
 
 
+
 class ShoppingCarModel:
     """
         购物车数据模型，包含id, name, price, count
@@ -396,6 +397,7 @@ class ShoppingCarManagerController(ShoppingCarController):
             return 0
 
 
+
 class Error:
     """
         错误父类
@@ -565,35 +567,6 @@ class ListHelper:
             if func_condition(item):
                 return item
 
-    @staticmethod
-    def match_price_equality(item, value):
-        """
-            匹配价格相等要求
-        :param item: 对象
-        :param value: 匹配相关值
-        :return: bool值
-        """
-        return item.price == value
-
-    @staticmethod
-    def match_price_under(item, value):
-        """
-            匹配价格小于要求
-        :param item: 对象
-        :param value: 匹配相关值
-        :return: bool值
-        """
-        return item.price < value
-
-    @staticmethod
-    def match_price_greater(item, value):
-        """
-            匹配价格大于要求
-        :param item: 对象
-        :param value: 匹配相关值
-        :return: bool值
-        """
-        return item.price > value
 
 
 class CommodityManagerView:
@@ -706,6 +679,7 @@ class CommodityManagerView:
             打印商品
         """
         print(commodity.id, commodity.name, commodity.price, commodity.inventory)
+
 
 
 class ShoppingCarView:
@@ -831,6 +805,7 @@ class ShoppingCarView:
             print("未购买任何商品！")
 
 
+
 class NavigationView:
     """
         导航视图
@@ -870,6 +845,7 @@ class NavigationView:
             if self.__select_menu() == -1:
                 print("退出")
                 break
+
 
 
 if __name__ == "__main__":
