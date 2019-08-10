@@ -344,13 +344,13 @@ class ShoppingCarManagerController(ShoppingCarController):
         :param count: 移除这个id的商品个数 int
         :return: True 操作成功, False 操作失败
         """
-        for commodity in self.car_list:
-            if commodity.id == com_id:
-                commodity.count -= count
-                if commodity.count == 0:
-                    self.__del_in_car(com_id)
-                self.com_manager.update_inventory(com_id, count)
-                return True
+        commodity = self.search_id_in_car(com_id)
+        if commodity:
+            commodity.count -= count
+            if commodity.count == 0:
+                self.__del_in_car(com_id)
+            self.com_manager.update_inventory(com_id, count)
+            return True
         return False
 
     def __del_in_car(self, value):
