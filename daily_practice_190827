@@ -482,7 +482,10 @@ class ExcelDataModel:
     @pop_code.setter
     def pop_code(self, value):
         self.__pop_code = value
-        
+
+
+import xlrd, xlwt
+
 
 class ExcelDateController:
     """
