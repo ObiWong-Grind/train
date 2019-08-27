@@ -1,6 +1,7 @@
 """
     在学习Python 1个月后，运用所学到的知识，实际运用到日常的工作中。
     通过外部nfc接收器传入nfc号，在已导入的Excel中查找匹配相关硬件，并导出成为新的Excel中。
+    大大节省了原本通过人工手动核对所消耗的大量时间。
 """
 
 
@@ -300,8 +301,8 @@ class ErrorWord(CommonWord):
         self.__error_word = {
             201: "\033[31m提示:输入的键值不符合要求!\033[0m",
             202: "\033[31m提示:索引输入有误!\033[0m",
-            203: "\033[31m提示:这张卡不存在!\033[0m",
-            204: "\033[31m提示:这张卡已经处理过了!\033[0m",
+            203: "\033[31m提示:这张 不存在!\033[0m",
+            204: "\033[31m提示:这张 已经处理过了!\033[0m",
             205: "\033[31m提示:输入的MAC号有误, 请注意长度和大小写(要求大写)!\033[0m",
         }
 
@@ -532,7 +533,7 @@ class ExcelDateController:
 
     def exists_from_nfc(self, value):
         """
-            根据nfc从数据库中查找相应对象是否存在
+            根据nfc从self.__ls中查找相应对象是否存在
         :param value: nfc号
         :return: True 存在, False 不存在
         """
@@ -540,7 +541,7 @@ class ExcelDateController:
 
     def exists_from_nfc_output(self, value):
         """
-            根据nfc查找在导出的列表中是否存在智慧卡
+            根据nfc在导出的链表中查找是否存在
         :param value: nfc号
         :return: True 存在, False 不存在
         """
@@ -548,7 +549,7 @@ class ExcelDateController:
 
     def exists_from_mac(self, value):
         """
-            根据mac从数据库中查找相应对象是否存在
+            根据mac从self.__ls中查找相应对象是否存在
         :param value: mac号
         :return: True 存在, False 不存在
         """
@@ -556,7 +557,7 @@ class ExcelDateController:
 
     def exists_from_mac_output(self, value):
         """
-            根据mac查找在导出的列表中是否存在智慧卡
+            根据mac在导出的链表中查找是否存在
         :param value: mac号
         :return: True 存在, False 不存在
         """
@@ -565,7 +566,7 @@ class ExcelDateController:
     @Tools.get_count
     def return_from_nfc(self, value):
         """
-            根据nfc从数据库中返回相应的智慧卡
+            根据nfc从self.__ls中返回相应的
         :param value: nfc号
         :return: 返回具体对象
         """
@@ -574,7 +575,7 @@ class ExcelDateController:
     @Tools.get_count
     def return_from_mac(self, value):
         """
-            根据mac从数据库中返回相应的智慧卡
+            根据mac从self.__ls中返回相应的
         :param value: mac号
         :return: 返回具体对象
         """
@@ -582,15 +583,14 @@ class ExcelDateController:
 
     def add_lead_list(self, element):
         """
-            将从数据库中查找的结果存入目标对象
+            将从self.__ls中查找的结果存入导出链表
         :param element: 目标对象
         """
         self.__output_ls.head_insert(element)
 
     def save_excel(self, sheet_word, save_word):
         """
-            将 lead_database 数据库中的数据导出保存新的excel
-            book.save("new.xls")
+            导出保存新的excel -- book.save("new.xls")
         :param sheet_word: 填写sheet的提示语
         :param save_word: 填写excel文件名的提示语
         """
