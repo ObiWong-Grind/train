@@ -507,7 +507,7 @@ class ExcelDateController:
     @Tools.operation_time
     def add_data(self, work_excel, sheet_indexes):
         """
-            将excel中的每一行以一个对象插入数据库
+            将excel中的每一行以一个对象插入self.__ls
         :param work_excel: 需要导入的excel
         :param sheet_indexes: excel的sheet索引, 从0开始
         """
