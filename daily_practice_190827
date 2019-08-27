@@ -1,0 +1,758 @@
+"""
+    在学习Python 1个月后，运用所学到的知识，实际运用到日常的工作中。
+    通过外部nfc接收器传入nfc号，在已导入的Excel中查找匹配相关硬件，并导出成为新的Excel中。
+"""
+
+
+"""
+    数据存储模型
+"""
+
+class Node:
+    """
+        节点类
+    """
+    def __init__(self, val, next_=None):
+        """
+            创建节点对象
+        :param val: 存储有用数据的
+        :param next_: 寻找下一个节点引用
+        """
+        self.val = val
+        self.next_ = next_
+
+
+class LinkList:
+    """
+        对链表的操作
+    """
+    def __init__(self):
+        """
+            初始化链表, 标记一个链表的开端, 以便于获取后续的节点
+        """
+        self._head = Node(None)
+
+    def show(self):
+        """
+            遍历链表
+        """
+        p = self._head.next_
+        while p is not None:
+            yield p.val
+            p = p.next_
+
+    def is_empty(self):
+        """
+            判断链表为空, 就是判断链表第一个之后是否存在
+        :return: True 为空, False 非空
+        """
+        if self._head.next_ is None:
+            return True
+        else:
+            return False
+
+    def clear(self):
+        """
+            清空链表
+        """
+        self._head.next_ = None
+
+    def append(self, val):
+        """
+            尾部插入节点
+        :param val: 插入新节点的值
+        """
+        p = self._head
+        while p.next_ is not None:
+            p = p.next_
+        p.next_ = Node(val)
+
+    def head_insert(self, val):
+        """
+            头部插入节点
+        :param val: 插入新节点的值
+        """
+        new_node = Node(val)
+        new_node.next_ = self._head.next_
+        self._head.next_ = new_node
+
+    def insert(self, index, val):
+        """
+            指定位置之后插入
+        :param index: 插入位置
+        :param val: 插入新节点的值
+        """
+        p = self._head
+        for i in range(index):
+            if p.next_ is None:  # 超出位置最大范围结束循环
+                break
+            p = p.next_
+        new_node = Node(val)
+        new_node.next_ = p.next_
+        p.next_ = new_node
+
+    def remove(self, x):
+        """
+            按值删除节点
+        :param x: 目标值
+        """
+        p = self._head
+        while p.next_ and p.next_.val != x:
+            p = p.next_
+        if p.next_ is None:
+            raise ValueError("x not in linklist")
+        else:
+            p.next_ = p.next_.next_
+
+    def get_index(self, index):
+        """
+            根据节点的位置, 获取节点的值
+        :param index: 索引, 必须 >= 0
+        :return: 值
+        """
+        if index < 0:
+            raise IndexError("linklist index out of range")
+        p = self._head.next_
+        for i in range(index):
+            if p.next_ is None:
+                raise IndexError("linklist index out of range")
+            p = p.next_
+        return p.val
+
+    def search_all(self, func_condition):
+        """
+            查找满足条件的所有元素方法
+        :param func_condition: 需要查找的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 需要查找的元素
+        """
+        p = self._head.next_
+        while p is not None:
+            if func_condition(p.val):
+                yield p.val
+            p = p.next_
+
+    def search_single(self, func_condition):
+        """
+            查找满足条件的唯一或第一个元素的方法
+        :param func_condition: 需要查找的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 需要查找的一个元素
+        """
+        p = self._head.next_
+        while p is not None:
+            if func_condition(p.val):
+                return p.val
+            p = p.next_
+
+    def is_exists(self, func_condition):
+        """
+            查找满足条件的元素是否存在的方法
+        :param func_condition: 需要查找的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: True 存在, False 不存在
+        """
+        p = self._head.next_
+        while p is not None:
+            if func_condition(p.val):
+                return True
+            p = p.next_
+        return False
+
+
+"""
+    一些工具
+"""
+
+import time
+
+
+class Tools:
+    """
+        工具类
+    """
+    @staticmethod
+    def operation_time(func):
+        """
+            统计耗时
+        :param func: 原函数名称
+        :return: func(*args, **kwargs)
+        """
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            execute_time = time.time() - start_time
+            print("耗时:%.6f秒" % execute_time)
+            return result
+
+        return wrapper
+
+    @staticmethod
+    def get_count(func):
+        """
+            统计数量
+        :param func: 原函数名称
+        :return: func(*args, **kwargs)
+        """
+        count = 1
+
+        def wrapper(*args, **kwargs):
+            nonlocal count
+            print("第%d张" % count)
+            count += 1
+            return func(*args, **kwargs)
+
+        return wrapper
+
+
+class InputHelper:
+    """
+        输入帮助类，按照要求判断输入内容是否符合要求
+    """
+    @staticmethod
+    def input_value(message01, message02, target_type, func_condition):
+        """
+            判断输入数字或小数内容是否符合规则的方法
+        :param message01: 输入内容提示语 str
+        :param message02: 错误提示语 str
+        :param target_type: "int" or "float" or "str" str型
+        :param func_condition: 需要匹配的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 输入的内容经过 int or float 转换后的数值
+                    根据 target_type 决定 返回值类型
+        """
+        while True:
+            value = input(message01)
+            try:
+                value = eval(target_type)(value)
+                if func_condition(value):
+                    return value
+                raise ValueError()
+            except Exception:
+                print(message02)
+
+    @staticmethod
+    def input_key(message01, message02, func_condition):
+        """
+            通用判断输入内容是在范围内的方法
+        :param message01: 输入内容提示语 str
+        :param message02: 错误提示语 str
+        :param func_condition: 需要匹配的条件, 函数类型
+                    函数名(参数) --> bool
+        :return: 输入的内容
+        """
+        while True:
+            value = input(message01)
+            try:
+                if func_condition(value):
+                    return value
+                raise ValueError()
+            except Exception:
+                print(message02)
+
+
+class CommonWord:
+    """
+        常用话术
+    """
+    def __init__(self, key):
+        self.key = key
+
+    @property
+    def key(self):
+        return self.__key
+
+    @key.setter
+    def key(self, value):
+        self.__key = value
+
+    def set(self):
+        raise NotImplementedError()
+
+
+class InputWord(CommonWord):
+    """
+        输入提示语
+    """
+    def __init__(self, key):
+        super().__init__(key)
+        self.__input_word = {
+            101: "输入菜单快捷键:",
+            102: "请输入sheet索引:",
+            103: "请输入Excel文件名(请加后缀):",
+            104: "输入NFC:",
+            105: "输入的excel文件名(请加后缀.xls):",
+            106: "输入sheet名:",
+            107: "已退出!",
+            108: "输入MAC:",
+        }
+
+    def set(self):
+        return self.__input_word[self.key]
+
+
+class ErrorWord(CommonWord):
+    """
+        错误提示语
+    """
+    def __init__(self, key):
+        super().__init__(key)
+        self.__error_word = {
+            201: "\033[31m提示:输入的键值不符合要求!\033[0m",
+            202: "\033[31m提示:索引输入有误!\033[0m",
+            203: "\033[31m提示:这张卡不存在!\033[0m",
+            204: "\033[31m提示:这张卡已经处理过了!\033[0m",
+            205: "\033[31m提示:输入的MAC号有误, 请注意长度和大小写(要求大写)!\033[0m",
+        }
+
+    def set(self):
+        return self.__error_word[self.key]
+
+
+class HintWord(CommonWord):
+    """
+        提示
+    """
+    def __init__(self, key):
+        super().__init__(key)
+        self.__hint_word = {
+            301: "修改成功!",
+            302: "修改失败!",
+            303: "移除成功!",
+            304: "移除失败!",
+        }
+
+    def set(self):
+        return self.__hint_word[self.key]
+
+
+"""
+    Excel导入，新Excel导出处理的MVC
+"""
+
+class ExcelDataModel:
+    """
+        表格导入的数据模型
+    """
+    def __init__(self, mac=None, nfc=None, name=None, birthday=None, versions=None, channel=None, mode=None, state=None,
+                 price=None, class_code=None, enl_code=None, stu_code=None, sch_code=None, batch=None, sex=None,
+                 pop_code=None):
+        self.mac = mac
+        self.nfc = nfc
+        self.name = name
+        self.birthday = birthday
+        self.versions = versions
+        self.channel = channel
+        self.mode = mode
+        self.state = state
+        self.price = price
+        self.class_code = class_code
+        self.enl_code = enl_code
+        self.stu_code = stu_code
+        self.sch_code = sch_code
+        self.batch = batch
+        self.sex = sex
+        self.pop_code = pop_code
+
+    @property
+    def mac(self):
+        return self.__mac
+
+    @mac.setter
+    def mac(self, value):
+        self.__mac = value
+
+    @property
+    def nfc(self):
+        return self.__nfc
+
+    @nfc.setter
+    def nfc(self, value):
+        self.__nfc = value
+
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
+
+    @property
+    def birthday(self):
+        return self.__birthday
+
+    @birthday.setter
+    def birthday(self, value):
+        self.__birthday = value
+
+    @property
+    def versions(self):
+        return self.__versions
+
+    @versions.setter
+    def versions(self, value):
+        self.__versions = value
+
+    @property
+    def channel(self):
+        return self.__channel
+
+    @channel.setter
+    def channel(self, value):
+        self.__channel = value
+
+    @property
+    def mode(self):
+        return self.__mode
+
+    @mode.setter
+    def mode(self, value):
+        self.__mode = value
+
+    @property
+    def state(self):
+        return self.__state
+
+    @state.setter
+    def state(self, value):
+        self.__state = value
+
+    @property
+    def price(self):
+        return self.__price
+
+    @price.setter
+    def price(self, value):
+        self.__price = value
+
+    @property
+    def class_code(self):
+        return self.__class_code
+
+    @class_code.setter
+    def class_code(self, value):
+        self.__class_code = value
+
+    @property
+    def enl_code(self):
+        return self.__enl_code
+
+    @enl_code.setter
+    def enl_code(self, value):
+        self.__enl_code = value
+
+    @property
+    def stu_code(self):
+        return self.__stu_code
+
+    @stu_code.setter
+    def stu_code(self, value):
+        self.__stu_code = value
+
+    @property
+    def sch_code(self):
+        return self.__sch_code
+
+    @sch_code.setter
+    def sch_code(self, value):
+        self.__sch_code = value
+
+    @property
+    def batch(self):
+        return self.__batch
+
+    @batch.setter
+    def batch(self, value):
+        self.__batch = value
+
+    @property
+    def sex(self):
+        return self.__sex
+
+    @sex.setter
+    def sex(self, value):
+        self.__sex = value
+
+    @property
+    def pop_code(self):
+        return self.__pop_code
+
+    @pop_code.setter
+    def pop_code(self, value):
+        self.__pop_code = value
+        
+
+class ExcelDateController:
+    """
+        Excel 数据处理控制器
+    """
+    def __init__(self):
+        self.__ls = LinkList()
+        self.__output_ls = LinkList()
+
+    def __get_from_excel(self, work_excel, sheet_indexes):
+        """
+            将excel中的每一行取出
+        :param work_excel: 需要导入的excel
+        :param sheet_indexes: excel的sheet索引, 从0开始
+        :return: 生成器
+        """
+        wb = xlrd.open_workbook(work_excel)
+        sheet = wb.sheet_by_index(sheet_indexes)
+        for item in sheet.get_rows():
+            yield item
+
+    @Tools.operation_time
+    def add_data(self, work_excel, sheet_indexes):
+        """
+            将excel中的每一行以一个对象插入数据库
+        :param work_excel: 需要导入的excel
+        :param sheet_indexes: excel的sheet索引, 从0开始
+        """
+        for item in self.__get_from_excel(work_excel, sheet_indexes):
+            data = ExcelDataModel()
+            data.mac = item[0].value
+            data.nfc = item[1].value
+            data.name = item[2].value
+            data.birthday = item[3].value
+            data.versions = item[4].value
+            data.channel = item[5].value
+            data.mode = item[6].value
+            data.state = item[7].value
+            data.price = item[8].value
+            data.class_code = item[9].value
+            data.enl_code = item[10].value
+            data.stu_code = item[11].value
+            data.sch_code = item[12].value
+            data.batch = item[13].value
+            data.sex = item[14].value
+            data.pop_code = item[15].value
+            self.__ls.head_insert(data)
+
+    def exists_from_nfc(self, value):
+        """
+            根据nfc从数据库中查找相应对象是否存在
+        :param value: nfc号
+        :return: True 存在, False 不存在
+        """
+        return self.__ls.is_exists(lambda item: item.nfc == value)
+
+    def exists_from_nfc_output(self, value):
+        """
+            根据nfc查找在导出的列表中是否存在智慧卡
+        :param value: nfc号
+        :return: True 存在, False 不存在
+        """
+        return self.__output_ls.is_exists(lambda item: item.nfc == value)
+
+    def exists_from_mac(self, value):
+        """
+            根据mac从数据库中查找相应对象是否存在
+        :param value: mac号
+        :return: True 存在, False 不存在
+        """
+        return self.__ls.is_exists(lambda item: item.mac == value)
+
+    def exists_from_mac_output(self, value):
+        """
+            根据mac查找在导出的列表中是否存在智慧卡
+        :param value: mac号
+        :return: True 存在, False 不存在
+        """
+        return self.__output_ls.is_exists(lambda item: item.mac == value)
+
+    @Tools.get_count
+    def return_from_nfc(self, value):
+        """
+            根据nfc从数据库中返回相应的智慧卡
+        :param value: nfc号
+        :return: 返回具体对象
+        """
+        return self.__ls.search_single(lambda item: item.nfc == value)
+
+    @Tools.get_count
+    def return_from_mac(self, value):
+        """
+            根据mac从数据库中返回相应的智慧卡
+        :param value: mac号
+        :return: 返回具体对象
+        """
+        return self.__ls.search_single(lambda item: item.mac == value)
+
+    def add_lead_list(self, element):
+        """
+            将从数据库中查找的结果存入目标对象
+        :param element: 目标对象
+        """
+        self.__output_ls.head_insert(element)
+
+    def save_excel(self, sheet_word, save_word):
+        """
+            将 lead_database 数据库中的数据导出保存新的excel
+            book.save("new.xls")
+        :param sheet_word: 填写sheet的提示语
+        :param save_word: 填写excel文件名的提示语
+        """
+        book, sheet = self.__input_parameter(sheet_word)
+        self.__found_title()
+        row = 0  # 控制行
+        for item in self.__output_ls.show():
+            col = 0  # 控制列
+            tmp_list = [item.mac, item.nfc, item.name, item.birthday, item.sch_code, item.class_code, item.enl_code,
+                        item.stu_code, item.sex, item.pop_code, item.state, item.batch, item.versions]
+            for s in tmp_list:  # 循环list01里面的值，每一项一列
+                sheet.write(row, col, s)
+                col += 1
+            row += 1
+        book.save(save_word)  # 保存到当前目录下
+
+    def __input_parameter(self, sheet_word):
+        """
+            新建一个excel
+        :param sheet_word: 填写sheet的提示语
+        :return: 新excel, 第一个sheet名
+        """
+        book = xlwt.Workbook()  # 新建一个excel
+        sheet = book.add_sheet(sheet_word)  # 添加一个sheet页
+        return book, sheet
+
+    def __found_title(self):
+        """
+            创建Excel表头
+        """
+        tmp = ExcelDataModel("MAC号", "NFC号", "持有人", "持有人信息", "卡版本", "售出渠道", "售出方式", "卡目前状态", "售出价格",
+                             "班级编号", "学籍号", "学号", "学校编号", "批次", "性别", "身份证")
+        self.__output_ls.head_insert(tmp)
+
+    def clear_ls(self):
+        """
+            清空链表，在退出程序时释放内存空间
+        """
+        self.__ls.clear()
+        self.__output_ls.clear()
+
+
+class ExcelDateView:
+    """
+        数据操作视图
+    """
+    def __init__(self):
+        self.__data = ExcelDateController()
+
+    def __input_excel_name(self):
+        """
+            输入Excel文件名
+        :return: 文件名
+        """
+        execl_name = input(InputWord(103).set())
+        return execl_name
+
+    def __input_excel_index(self):
+        """
+            输入索引
+        :return: int 型
+        """
+        return InputHelper.input_value(InputWord(102).set(), ErrorWord(202).set(), "int", lambda item: item >= 0)
+
+    def __lead_excel(self):
+        """
+            录入数据
+        """
+        name = self.__input_excel_name()
+        index = self.__input_excel_index()
+        self.__data.add_data(name, index)
+
+    def __display_menu(self):
+        """
+            菜单
+        """
+        print()
+        print("1、导入Excel")
+        print("2、输入NFC")
+        print("3、输入MAC")
+        print("4、导出表格")
+        print("q、退出")
+        print()
+
+    def __input_nfc(self):
+        """
+            输入NFC
+        """
+        while True:
+            nfc = input(InputWord(104).set())
+            if nfc == "q" or nfc == "Q":
+                break
+            self.__find_card(self.__data.exists_from_nfc, self.__data.exists_from_nfc_output, self.__data.return_from_nfc, nfc)
+
+    def __input_mac(self):
+        """
+            输入MAC
+        """
+        while True:
+            mac = input(InputWord(108).set())
+            mac = mac.upper()
+            if mac == "q" or mac == "Q":
+                break
+            self.__find_card(self.__data.exists_from_mac, self.__data.exists_from_mac_output, self.__data.return_from_mac, mac)
+
+    def __find_card(self, condition01, condition02, condition03, value):
+        """
+            按照 MAC 或 NFC 查找对象
+        :param value: mac号 或 nfc号
+        """
+        target = condition01(value)
+        lead = condition02(value)
+        if target is True and lead is False:
+            result = condition03(value)
+            self.__data.add_lead_list(result)
+        elif target is False:
+            print(ErrorWord(203).set())
+        elif lead is True:
+            print(ErrorWord(204).set())
+
+    def __read_lead_list(self):
+        """
+            保存新的excel
+        """
+        sheet_word = input(InputWord(106).set())
+        save_word = input(InputWord(105).set())
+        self.__data.save_excel(sheet_word, save_word)
+
+    def __select_menu(self):
+        """
+            输入快捷键
+        """
+        key = InputHelper.input_key(InputWord(101).set(), ErrorWord(201).set(),
+                                    lambda value: value in ("1", "2", "3", "4", "q", "Q"))
+        if key == "1":
+            self.__lead_excel()
+        elif key == "2":
+            self.__input_nfc()
+        elif key == "3":
+            self.__input_mac()
+        elif key == "4":
+            self.__read_lead_list()
+        elif key == "q" or key == "Q":
+            return -1
+
+    def main(self):
+        """
+            总入口
+        """
+        while True:
+            self.__display_menu()
+            if self.__select_menu() == -1:
+                print(InputWord(107).set())
+                self.__data.clear_ls()
+                break
+
+
+if __name__ == "__main__":
+    result = ExcelDateView()
+    result.main()
+    
+
+
+
+
